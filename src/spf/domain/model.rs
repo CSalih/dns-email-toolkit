@@ -138,9 +138,14 @@ impl Display for Directive {
 
 pub struct Modifier {}
 
+pub struct Unknown {
+    pub raw_rdata: String,
+}
+
 pub enum Term {
     Directive(Directive),
     Modifier(Modifier),
+    Unknown(Unknown),
 }
 
 impl Term {
@@ -160,11 +165,15 @@ impl Term {
             Ok(q) => Some(q),
             Err(_) => None,
         };
-        let mechanism = Mechanism::from_str(mechanism_str).unwrap();
 
-        Ok(Term::Directive(Directive {
-            qualifier,
-            mechanism,
-        }))
+        match Mechanism::from_str(mechanism_str) {
+            Ok(mechanism) => Ok(Term::Directive(Directive {
+                qualifier,
+                mechanism,
+            })),
+            Err(_) => Ok(Term::Unknown(Unknown {
+                raw_rdata: mechanism_str.to_string(),
+            })),
+        }
     }
 }
