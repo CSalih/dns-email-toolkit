@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::spf::infrastructure::cli::Spf;
-use crate::spf::infrastructure::dns_resolver_gateway::DnsResolverGateway;
+use crate::spf::infrastructure::gateway::DnsResolver;
 use crate::spf::use_case::summary_spf::{SummarySpfQuery, SummarySpfUseCase};
 use crate::spf::use_case::summary_spf_impl::SummarySpfUseCaseImpl;
 use crate::spf::use_case::summary_spf_terminal_presenter::SummarySpfTerminalPresenter;
@@ -28,7 +28,7 @@ async fn main() {
 
     match &args.command {
         Commands::Spf(spf) => {
-            let mut dns_resolver_gateway = DnsResolverGateway::new();
+            let mut dns_resolver_gateway = DnsResolver::new();
             let mut summary_spf_use_case = SummarySpfUseCaseImpl::new(&mut dns_resolver_gateway);
             let query = SummarySpfQuery {
                 domain_name: spf.domain.clone(),

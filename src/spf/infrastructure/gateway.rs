@@ -9,15 +9,15 @@ use domain::base::{Dname, Rtype};
 use domain::rdata::AllRecordData;
 use domain::resolv::StubResolver;
 
-pub struct DnsResolverGateway {}
+pub struct DnsResolver {}
 
-impl DnsResolverGateway {
+impl DnsResolver {
     pub fn new() -> Self {
-        DnsResolverGateway {}
+        DnsResolver {}
     }
 }
 
-impl QueryTxtRecordGateway for DnsResolverGateway {
+impl QueryTxtRecordGateway for DnsResolver {
     fn query_txt(
         &mut self,
         command: &QueryTxtRecordQuery,
