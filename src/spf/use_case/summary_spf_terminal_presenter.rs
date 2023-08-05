@@ -24,6 +24,9 @@ impl Presenter<SpfSummary, String> for SummarySpfTerminalPresenter {
                 Term::Modifier(_) => {
                     println!("\t- Modifier not implemented yet");
                 }
+                Term::Unknown(u) => {
+                    println!("\t- Unknown term: {}", u.raw_rdata);
+                }
             });
         }
     }
