@@ -1,23 +1,46 @@
-use std::error::Error;
-use std::str::FromStr;
-use std::thread;
-
 use crate::spf::use_case::summary_spf_gateway::{
     QueryTxtRecord, QueryTxtRecordGateway, QueryTxtRecordQuery,
 };
 use domain::base::{Dname, Rtype};
 use domain::rdata::AllRecordData;
 use domain::resolv::StubResolver;
+use std::error::Error;
+use std::str::FromStr;
+use std::thread;
 
-pub struct DnsResolverGateway {}
+pub struct InMemoryDnsResolver {
+    rdata: String,
+}
 
-impl DnsResolverGateway {
-    pub fn new() -> Self {
-        DnsResolverGateway {}
+impl InMemoryDnsResolver {
+    pub fn new(rdata: String) -> Self {
+        InMemoryDnsResolver { rdata }
     }
 }
 
-impl QueryTxtRecordGateway for DnsResolverGateway {
+impl QueryTxtRecordGateway for InMemoryDnsResolver {
+    fn query_txt(&mut self, query: &QueryTxtRecordQuery) -> Result<QueryTxtRecord, Box<dyn Error>> {
+        println!(
+            "[Debug] Try collecting TXT record for '{}' using in-memory dns resolver",
+            query.domain_name
+        );
+
+        let records = vec![self.rdata.clone()];
+
+        println!("[Info] Found {} TXT records", records.iter().count());
+        Ok(QueryTxtRecord { records })
+    }
+}
+
+pub struct DnsResolver {}
+
+impl DnsResolver {
+    pub fn new() -> Self {
+        DnsResolver {}
+    }
+}
+
+impl QueryTxtRecordGateway for DnsResolver {
     fn query_txt(
         &mut self,
         command: &QueryTxtRecordQuery,
@@ -39,7 +62,7 @@ impl QueryTxtRecordGateway for DnsResolverGateway {
                     .answer()
                     .unwrap()
                     .limit_to::<AllRecordData<_, _>>()
-                    .map(|record| record.unwrap().data().to_string())
+                    .map(|record| record.unwrap().data().to_string().replace("\\32", " "))
                     .collect::<Vec<String>>();
 
                 println!("[Info] Found {} TXT records", records.iter().count());
