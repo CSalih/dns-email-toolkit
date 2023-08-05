@@ -39,7 +39,7 @@ impl QueryTxtRecordGateway for DnsResolver {
                     .answer()
                     .unwrap()
                     .limit_to::<AllRecordData<_, _>>()
-                    .map(|record| record.unwrap().data().to_string())
+                    .map(|record| record.unwrap().data().to_string().replace("\\32", " "))
                     .collect::<Vec<String>>();
 
                 println!("[Info] Found {} TXT records", records.iter().count());
