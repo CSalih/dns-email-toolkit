@@ -1,4 +1,4 @@
-use crate::spf::use_case::summary_spf_gateway::{
+use crate::spf::core::summary_spf::gateway::{
     QueryTxtRecord, QueryTxtRecordGateway, QueryTxtRecordQuery,
 };
 use domain::base::{Dname, Rtype};
