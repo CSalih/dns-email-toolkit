@@ -1,6 +1,6 @@
 use crate::common::presenter::Presenter;
-use crate::spf::domain::model::Term;
 use crate::spf::core::summary_spf::use_case::SpfSummary;
+use crate::spf::domain::model::Term;
 
 pub struct SummarySpfTerminalPresenter {}
 
