@@ -2,10 +2,7 @@ use clap::{Parser, Subcommand};
 
 use crate::spf::infrastructure::cli::Spf;
 use crate::spf::infrastructure::gateway::{DnsResolver, InMemoryDnsResolver};
-use crate::spf::use_case::summary_spf::{SummarySpfQuery, SummarySpfUseCase};
-use crate::spf::use_case::summary_spf_gateway::QueryTxtRecordGateway;
-use crate::spf::use_case::summary_spf_impl::SummarySpfUseCaseImpl;
-use crate::spf::use_case::summary_spf_terminal_presenter::SummarySpfTerminalPresenter;
+use crate::spf::core::summary_spf::{SummarySpfQuery, SummarySpfUseCase, QueryTxtRecordGateway, SummarySpfUseCaseImpl, SummarySpfTerminalPresenter};
 
 pub mod common;
 pub mod spf;
