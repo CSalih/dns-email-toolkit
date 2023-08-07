@@ -1,6 +1,6 @@
 use crate::common::presenter::Presenter;
-use crate::spf::domain::model::{Term, Version};
 use crate::spf::core::summary_spf::gateway::{QueryTxtRecordGateway, QueryTxtRecordQuery};
+use crate::spf::domain::model::{Term, Version};
 
 pub trait SummarySpfUseCase {
     /// Summary the SPF record of a domain name.
