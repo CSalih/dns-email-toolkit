@@ -56,8 +56,7 @@ impl<'a> SummarySpfUseCase for SummarySpfUseCaseImpl<'a> {
             .records
             .iter()
             .map(|record| record.to_string())
-            .filter(|line| line.starts_with("v=spf1")) // TODO: it must exactly match 'v=spf1' is not allowed
-            .nth(0);
+            .find(|line| line.starts_with("v=spf1")); // TODO: it must exactly match 'v=spf1' is not allowed
 
         if raw_rdata_option.is_none() {
             presenter.error(format!("No SPF record found for {}", query.domain_name));

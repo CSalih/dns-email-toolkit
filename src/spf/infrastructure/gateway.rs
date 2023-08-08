@@ -27,7 +27,7 @@ impl QueryTxtRecordGateway for InMemoryDnsResolver {
 
         let records = vec![self.rdata.clone()];
 
-        println!("[Info] Found {} TXT records", records.iter().count());
+        println!("[Info] Found {} TXT records", records.len());
         Ok(QueryTxtRecord { records })
     }
 }
@@ -71,7 +71,7 @@ impl QueryTxtRecordGateway for DnsResolver {
                     .map(|record| record.unwrap().data().to_string().replace("\\32", " "))
                     .collect::<Vec<String>>();
 
-                println!("[Info] Found {} TXT records", records.iter().count());
+                println!("[Info] Found {} TXT records", records.len());
                 Ok(QueryTxtRecord { records })
             }
             Err(err) => Err(Box::new(err)),
