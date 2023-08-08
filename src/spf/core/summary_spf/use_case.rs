@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::common::presenter::Presenter;
 use crate::spf::core::summary_spf::gateway::{QueryTxtRecordGateway, QueryTxtRecordQuery};
 use crate::spf::domain::model::{Term, Version};
@@ -56,17 +58,16 @@ impl<'a> SummarySpfUseCase for SummarySpfUseCaseImpl<'a> {
             .records
             .iter()
             .map(|record| record.to_string())
-            .filter(|line| line.starts_with("v=spf1")) // TODO: it must exactly match 'v=spf1' is not allowed
-            .nth(0);
+            .find(|line| line.starts_with("v=spf1")); // TODO: it must exactly match 'v=spf1' is not allowed
 
         if raw_rdata_option.is_none() {
             presenter.error(format!("No SPF record found for {}", query.domain_name));
             return;
         }
         let raw_rdata = raw_rdata_option.unwrap();
-        let rdata_parts = raw_rdata.split(" ");
+        let rdata_parts = raw_rdata.split(' ');
 
-        let version = Version::from_str(rdata_parts.clone().next().unwrap());
+        let version = Version::from_str(rdata_parts.clone().next().unwrap()).unwrap();
         let terms = rdata_parts
             .clone()
             .skip(1)

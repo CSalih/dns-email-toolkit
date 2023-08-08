@@ -1,14 +1,16 @@
-use std::fmt::{Display, Formatter};
+use std::{fmt::{Display, Formatter}, str::FromStr};
 
 pub struct Version {
     pub version: String,
 }
 
-impl Version {
-    pub fn from_str(version_str: &str) -> Self {
-        Version {
-            version: version_str.to_string(),
-        }
+impl FromStr for Version {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Version, Self::Err> {
+        Ok(Version {
+            version: s.to_string(),
+        })
     }
 }
 
@@ -30,20 +32,6 @@ pub enum MechanismType {
 }
 
 impl MechanismType {
-    pub fn from_str(mechanism_str: &str) -> Result<Self, String> {
-        match mechanism_str {
-            "all" => Ok(MechanismType::All),
-            "include" => Ok(MechanismType::Include),
-            "a" => Ok(MechanismType::A),
-            "mx" => Ok(MechanismType::Mx),
-            "ptr" => Ok(MechanismType::Ptr),
-            "ip4" => Ok(MechanismType::Ip4),
-            "ip6" => Ok(MechanismType::Ip6),
-            "exists" => Ok(MechanismType::Exists),
-            _ => Err(format!("Unknown mechanism type: {}", mechanism_str)),
-        }
-    }
-
     fn as_str(&self) -> &'static str {
         match self {
             MechanismType::All => "all",
@@ -58,6 +46,24 @@ impl MechanismType {
     }
 }
 
+impl FromStr for MechanismType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<MechanismType, Self::Err> {
+        match s {
+            "all" => Ok(MechanismType::All),
+            "include" => Ok(MechanismType::Include),
+            "a" => Ok(MechanismType::A),
+            "mx" => Ok(MechanismType::Mx),
+            "ptr" => Ok(MechanismType::Ptr),
+            "ip4" => Ok(MechanismType::Ip4),
+            "ip6" => Ok(MechanismType::Ip6),
+            "exists" => Ok(MechanismType::Exists),
+            _ => Err(()),
+        }
+    }
+}
+
 pub struct Mechanism {
     /// The type of the mechanism
     pub mechanism_type: MechanismType,
@@ -65,15 +71,21 @@ pub struct Mechanism {
     pub domain_spec: String,
 }
 
-impl Mechanism {
-    pub fn from_str(mechanism_str: &str) -> Result<Self, String> {
-        let my_str = mechanism_str.to_string();
+impl FromStr for Mechanism {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mechanism_str = s.to_string();
         // TODO: check if there is more then two results
-        let (name, value) = my_str.split_once(":").unwrap_or((&my_str, ""));
-        Ok(Mechanism {
-            mechanism_type: MechanismType::from_str(name)?,
-            domain_spec: value.to_string(),
-        })
+        let (name, value) = mechanism_str.split_once(':').unwrap_or((&mechanism_str, ""));
+        
+        match MechanismType::from_str(name) {
+            Ok(mechanism_type) => Ok(Mechanism {
+                mechanism_type,
+                domain_spec: value.to_string(),
+            }),
+            Err(_) => Err(format!("Unknown mechanism type: {}", name)),
+        }
     }
 }
 
@@ -96,17 +108,21 @@ pub enum QualifierType {
     Neutral,
 }
 
-impl QualifierType {
-    pub fn from_str(mechanism_str: &str) -> Result<Self, String> {
-        match mechanism_str {
+impl FromStr for QualifierType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
             "+" => Ok(QualifierType::Pass),
             "-" => Ok(QualifierType::Fail),
             "~" => Ok(QualifierType::SoftFail),
             "?" => Ok(QualifierType::Neutral),
-            _ => Err(format!("Unknown mechanism type: {}", mechanism_str)),
+            _ => Err(format!("Unknown mechanism type: {}", s)),
         }
     }
+}
 
+impl QualifierType {
     pub fn as_str(&self) -> &'static str {
         match self {
             QualifierType::Pass => "+",
@@ -148,8 +164,10 @@ pub enum Term {
     Unknown(Unknown),
 }
 
-impl Term {
-    pub fn from_str(s: &str) -> Result<Self, String> {
+impl FromStr for Term {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (qualifier, mechanism_str) = if s.starts_with(QualifierType::Pass.as_str()) {
             (QualifierType::Pass.as_str(), &s[1..])
         } else if s.starts_with(QualifierType::Fail.as_str()) {
