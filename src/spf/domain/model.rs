@@ -1,4 +1,7 @@
-use std::{fmt::{Display, Formatter}, str::FromStr};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
 pub struct Version {
     pub version: String,
@@ -77,8 +80,10 @@ impl FromStr for Mechanism {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mechanism_str = s.to_string();
         // TODO: check if there is more then two results
-        let (name, value) = mechanism_str.split_once(':').unwrap_or((&mechanism_str, ""));
-        
+        let (name, value) = mechanism_str
+            .split_once(':')
+            .unwrap_or((&mechanism_str, ""));
+
         match MechanismType::from_str(name) {
             Ok(mechanism_type) => Ok(Mechanism {
                 mechanism_type,
