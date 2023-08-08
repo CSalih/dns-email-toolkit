@@ -69,7 +69,7 @@ impl Mechanism {
     pub fn from_str(mechanism_str: &str) -> Result<Self, String> {
         let my_str = mechanism_str.to_string();
         // TODO: check if there is more then two results
-        let (name, value) = my_str.split_once(":").unwrap_or((&my_str, ""));
+        let (name, value) = my_str.split_once(':').unwrap_or((&my_str, ""));
         Ok(Mechanism {
             mechanism_type: MechanismType::from_str(name)?,
             domain_spec: value.to_string(),

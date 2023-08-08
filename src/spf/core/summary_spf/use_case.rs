@@ -63,7 +63,7 @@ impl<'a> SummarySpfUseCase for SummarySpfUseCaseImpl<'a> {
             return;
         }
         let raw_rdata = raw_rdata_option.unwrap();
-        let rdata_parts = raw_rdata.split(" ");
+        let rdata_parts = raw_rdata.split(' ');
 
         let version = Version::from_str(rdata_parts.clone().next().unwrap());
         let terms = rdata_parts
