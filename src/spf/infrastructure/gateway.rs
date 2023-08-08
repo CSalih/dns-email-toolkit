@@ -40,6 +40,12 @@ impl DnsResolver {
     }
 }
 
+impl Default for DnsResolver {
+    fn default() -> Self {
+        DnsResolver::new()
+    }
+}
+
 impl QueryTxtRecordGateway for DnsResolver {
     fn query_txt(
         &mut self,

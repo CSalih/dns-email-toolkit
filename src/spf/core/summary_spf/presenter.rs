@@ -10,6 +10,12 @@ impl SummarySpfTerminalPresenter {
     }
 }
 
+impl Default for SummarySpfTerminalPresenter {
+    fn default() -> Self {
+        SummarySpfTerminalPresenter::new()
+    }
+}
+
 impl Presenter<SpfSummary, String> for SummarySpfTerminalPresenter {
     fn success(&mut self, data: SpfSummary) {
         println!("Raw Record: '{}'", data.raw_rdata);
