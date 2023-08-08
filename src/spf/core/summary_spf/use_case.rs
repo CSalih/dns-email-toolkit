@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::common::presenter::Presenter;
 use crate::spf::core::summary_spf::gateway::{QueryTxtRecordGateway, QueryTxtRecordQuery};
 use crate::spf::domain::model::{Term, Version};
@@ -65,7 +67,7 @@ impl<'a> SummarySpfUseCase for SummarySpfUseCaseImpl<'a> {
         let raw_rdata = raw_rdata_option.unwrap();
         let rdata_parts = raw_rdata.split(' ');
 
-        let version = Version::from_str(rdata_parts.clone().next().unwrap());
+        let version = Version::from_str(rdata_parts.clone().next().unwrap()).unwrap();
         let terms = rdata_parts
             .clone()
             .skip(1)
