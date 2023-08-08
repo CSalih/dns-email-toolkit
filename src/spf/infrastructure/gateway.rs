@@ -46,6 +46,7 @@ impl Default for DnsResolver {
     }
 }
 
+#[allow(clippy::needless_return)]
 impl QueryTxtRecordGateway for DnsResolver {
     fn query_txt(
         &mut self,
