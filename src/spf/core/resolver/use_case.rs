@@ -34,7 +34,7 @@ pub struct ResolveSpfUseCaseImpl<'a> {
 }
 
 impl<'a> ResolveSpfUseCaseImpl<'a> {
-    pub fn _new(query_txt_record_gateway: &'a mut dyn DnsResolver) -> Self {
+    pub fn new(query_txt_record_gateway: &'a mut dyn DnsResolver) -> Self {
         ResolveSpfUseCaseImpl {
             dns_resolver: query_txt_record_gateway,
         }

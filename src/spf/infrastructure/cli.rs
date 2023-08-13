@@ -2,9 +2,9 @@ use clap::Args;
 
 #[derive(Args)]
 pub struct Spf {
-    /// Check if SPF syntax is valid
+    /// Output with details
     #[arg(short, long)]
-    pub check: bool,
+    pub detail: bool,
 
     /// Use record value instead of querying it from DNS
     /// (useful for testing)
