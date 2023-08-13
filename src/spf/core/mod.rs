@@ -1,2 +1,4 @@
+pub mod check;
 mod resolver;
-pub mod summary_spf;
+
+pub(in crate::spf) use resolver::use_case::ResolveSpfUseCaseImpl;

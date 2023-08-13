@@ -16,7 +16,7 @@ pub enum Mechanism {
 }
 
 impl Mechanism {
-    pub(crate) fn _need_lookup(&self) -> bool {
+    pub(crate) fn need_lookup(&self) -> bool {
         matches!(
             self,
             Mechanism::Include(_)

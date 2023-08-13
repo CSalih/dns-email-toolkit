@@ -1,11 +1,12 @@
+use crate::common::presenter::Presenter;
+use crate::dns::infrastructure::dns_resolver::DomainDnsResolver;
 use clap::{Parser, Subcommand};
 
-use crate::spf::core::summary_spf::{
-    QueryTxtRecordGateway, SummarySpfQuery, SummarySpfTerminalPresenter, SummarySpfUseCase,
-    SummarySpfUseCaseImpl,
+use crate::spf::core::check::{
+    SpfSummary, SummarySpfQuery, SummarySpfTerminalPresenter, SummarySpfUseCase,
+    SummarySpfUseCaseImpl, SummarySpfWithDetailTerminalPresenter,
 };
 use crate::spf::infrastructure::cli::Spf;
-use crate::spf::infrastructure::gateway::{DnsResolver, InMemoryDnsResolver};
 
 pub mod common;
 pub mod dns;
@@ -30,17 +31,19 @@ async fn main() {
 
     match &args.command {
         Commands::Spf(spf) => {
-            let mut dns_resolver_gateway: Box<dyn QueryTxtRecordGateway> = match &spf.record {
-                None => Box::new(DnsResolver::new()),
-                Some(rdata) => Box::new(InMemoryDnsResolver::new(rdata.to_string())),
+            let mut dns_resolver_gateway = DomainDnsResolver::new();
+            let presenter: Box<dyn Presenter<SpfSummary, String>> = if spf.detail {
+                Box::new(SummarySpfWithDetailTerminalPresenter::new())
+            } else {
+                Box::new(SummarySpfTerminalPresenter::new())
             };
-            let mut summary_spf_use_case = SummarySpfUseCaseImpl::new(&mut *dns_resolver_gateway);
-            let mut presenter = SummarySpfTerminalPresenter::new();
+            let mut summary_spf_use_case = SummarySpfUseCaseImpl::new(&mut dns_resolver_gateway);
 
             let query = SummarySpfQuery {
-                domain_name: spf.domain.clone(),
+                domain_name: spf.domain.to_owned(),
+                record: spf.record.to_owned(),
             };
-            summary_spf_use_case.execute(&query, &mut presenter);
+            summary_spf_use_case.execute(&query, presenter);
         }
     }
 }

@@ -4,7 +4,7 @@ pub enum Modifier {
 }
 
 impl Modifier {
-    pub(crate) fn _need_lookup(&self) -> bool {
+    pub(crate) fn need_lookup(&self) -> bool {
         matches!(self, Modifier::Redirect(_))
     }
 }
