@@ -8,6 +8,7 @@ use crate::spf::infrastructure::cli::Spf;
 use crate::spf::infrastructure::gateway::{DnsResolver, InMemoryDnsResolver};
 
 pub mod common;
+pub mod dns;
 pub mod spf;
 
 #[derive(Parser)]
