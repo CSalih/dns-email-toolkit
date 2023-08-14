@@ -87,7 +87,9 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
                     term if mechanism_str.starts_with("include:") => {
                         self.to_include_term_mut(qualifier, term)
                     }
-                    term if mechanism_str.starts_with("a:") => self.to_a_term_mut(qualifier, term),
+                    term if mechanism_str == "a" || mechanism_str.starts_with("a:") => {
+                        self.to_a_term_mut(qualifier, term, query.domain_name.clone().as_str())
+                    }
                     term if mechanism_str.starts_with("ip4:") => self.to_ipv4_term(qualifier, term),
                     term if mechanism_str.starts_with("ip6:") => self.to_ipv6_term(qualifier, term),
                     term if mechanism_str.starts_with("all") => self.to_all(qualifier, term),
@@ -107,8 +109,13 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
 }
 
 impl<'a> ResolveSpfUseCaseImpl<'a> {
-    fn to_a_term_mut(&mut self, qualifier: Option<QualifierType>, term: &str) -> Term {
-        let (_, domain_name) = term.split_once(':').unwrap_or((term, ""));
+    fn to_a_term_mut(
+        &mut self,
+        qualifier: Option<QualifierType>,
+        term: &str,
+        domain_name: &str,
+    ) -> Term {
+        let (_, domain_name) = term.split_once(':').unwrap_or((term, domain_name));
 
         let a_record = self.dns_resolver.query_a(&ARecordQuery {
             domain_name: domain_name.to_string(),
