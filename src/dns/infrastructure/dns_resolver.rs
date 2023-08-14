@@ -1,7 +1,7 @@
-use crate::dns::core::dns_resolver::{ARecordQuery, DnsResolver, TxtRecordQuery};
-use crate::dns::domain::{ARecord, TxtRecord};
+use crate::dns::core::dns_resolver::{ARecordQuery, DnsResolver, MxRecordQuery, TxtRecordQuery};
+use crate::dns::domain::{ARecord, MxRecord, TxtRecord};
 use domain::base::{Dname, Rtype};
-use domain::rdata::AllRecordData;
+use domain::rdata::{AllRecordData, Mx};
 use domain::resolv::StubResolver;
 use std::error::Error;
 use std::net::IpAddr;
@@ -88,6 +88,34 @@ impl DnsResolver for DomainDnsResolver {
 
                 println!("[Info] Found {} TXT records", records.len());
                 Ok(TxtRecord { records })
+            }
+            Err(err) => Err(Box::new(err)),
+        }
+    }
+
+    fn query_mx(&mut self, query: &MxRecordQuery) -> Result<MxRecord, Box<dyn Error>> {
+        let domain_name = Dname::<Vec<_>>::from_str(&query.domain_name).unwrap();
+        println!("[Debug] Try collecting MX records for '{}'", domain_name);
+
+        let res = thread::spawn(|| {
+            return StubResolver::run(move |stub| async move {
+                stub.query((domain_name, Rtype::Mx)).await
+            });
+        })
+        .join()
+        .expect("Thread panicked");
+
+        match res {
+            Ok(answer) => {
+                let exchanges = answer
+                    .answer()
+                    .unwrap()
+                    .limit_to::<Mx<_>>()
+                    .map(|record| record.unwrap().data().exchange().to_string())
+                    .collect::<Vec<String>>();
+
+                println!("[Info] Found {} MX records", exchanges.len());
+                Ok(MxRecord { exchanges })
             }
             Err(err) => Err(Box::new(err)),
         }

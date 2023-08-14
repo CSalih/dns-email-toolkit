@@ -7,3 +7,7 @@ pub struct ARecord {
 pub struct TxtRecord {
     pub records: Vec<String>,
 }
+
+pub struct MxRecord {
+    pub exchanges: Vec<String>,
+}

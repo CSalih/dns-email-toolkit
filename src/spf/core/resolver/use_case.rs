@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use crate::dns::core::dns_resolver::{ARecordQuery, DnsResolver, TxtRecordQuery};
+use crate::dns::core::dns_resolver::{ARecordQuery, DnsResolver, MxRecordQuery, TxtRecordQuery};
 use crate::spf::domain::{
     AMechanism, AllMechanism, Directive, IncludeMechanism, Ip4Mechanism, Ip6Mechanism, Mechanism,
-    QualifierType, SpfError, Term, UnknownTerm, Version,
+    MxMechanism, QualifierType, SpfError, Term, UnknownTerm, Version,
 };
 
 pub trait ResolveSpfUseCase {
@@ -90,6 +90,9 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
                     term if mechanism_str == "a" || mechanism_str.starts_with("a:") => {
                         self.to_a_term_mut(qualifier, term, query.domain_name.clone().as_str())
                     }
+                    term if mechanism_str == "mx" || mechanism_str.starts_with("mx:") => {
+                        self.to_mx_term_mut(qualifier, term, query.domain_name.clone().as_str())
+                    }
                     term if mechanism_str.starts_with("ip4:") => self.to_ipv4_term(qualifier, term),
                     term if mechanism_str.starts_with("ip6:") => self.to_ipv6_term(qualifier, term),
                     term if mechanism_str == "all" => self.to_all(qualifier, term),
@@ -127,6 +130,27 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
             mechanism: Mechanism::A(AMechanism {
                 ip_addresses: record.ip_addresses,
                 raw_value: domain_name.to_string(),
+            }),
+        })
+    }
+
+    fn to_mx_term_mut(
+        &mut self,
+        qualifier: Option<QualifierType>,
+        term: &str,
+        domain_name: &str,
+    ) -> Term {
+        let (_, domain_name) = term.split_once(':').unwrap_or((term, domain_name));
+
+        let a_record = self.dns_resolver.query_mx(&MxRecordQuery {
+            domain_name: domain_name.to_string(),
+        });
+        let record = a_record.unwrap();
+
+        Term::Directive(Directive {
+            qualifier,
+            mechanism: Mechanism::Mx(MxMechanism {
+                hosts: record.exchanges,
             }),
         })
     }

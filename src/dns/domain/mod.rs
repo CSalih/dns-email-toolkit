@@ -1,3 +1,3 @@
 mod record;
 
-pub use record::{ARecord, TxtRecord};
+pub use record::{ARecord, MxRecord, TxtRecord};
