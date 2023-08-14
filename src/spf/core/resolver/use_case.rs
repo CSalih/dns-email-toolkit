@@ -92,7 +92,7 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
                     }
                     term if mechanism_str.starts_with("ip4:") => self.to_ipv4_term(qualifier, term),
                     term if mechanism_str.starts_with("ip6:") => self.to_ipv6_term(qualifier, term),
-                    term if mechanism_str.starts_with("all") => self.to_all(qualifier, term),
+                    term if mechanism_str == "all" => self.to_all(qualifier, term),
                     _ => Term::Unknown(UnknownTerm {
                         raw_rdata: term.to_string(),
                     }),
