@@ -55,6 +55,18 @@ impl SummarySpfWithDetailTerminalPresenter {
 
                     println!("{} Raw Record: {}", tabs, i.raw_rdata);
                     Self::recursive_print(&tabs, &i.terms);
+                } else if let Mechanism::A(i) = &t.mechanism {
+                    let tabs = format!("{}\t", indent);
+
+                    println!(
+                        "{} IP: {}",
+                        tabs,
+                        &i.ip_addresses
+                            .iter()
+                            .map(|ip| ip.to_string())
+                            .collect::<Vec<String>>()
+                            .join(", ")
+                    );
                 }
             }
             Term::Modifier(_) => {
