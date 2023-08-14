@@ -9,7 +9,7 @@ mod version;
 pub use directive::Directive;
 pub use error::SpfError;
 pub use mechanism::{
-    AMechanism, AllMechanism, IncludeMechanism, Ip4Mechanism, Ip6Mechanism, Mechanism,
+    AMechanism, AllMechanism, IncludeMechanism, Ip4Mechanism, Ip6Mechanism, Mechanism, MxMechanism,
 };
 pub use qualifier::QualifierType;
 pub use term::{Term, UnknownTerm};

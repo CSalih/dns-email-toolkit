@@ -67,6 +67,10 @@ impl SummarySpfWithDetailTerminalPresenter {
                             .collect::<Vec<String>>()
                             .join(", ")
                     );
+                } else if let Mechanism::Mx(i) = &t.mechanism {
+                    let tabs = format!("{}\t", indent);
+
+                    println!("{} MX: {}", tabs, &i.hosts.join(", "));
                 }
             }
             Term::Modifier(_) => {

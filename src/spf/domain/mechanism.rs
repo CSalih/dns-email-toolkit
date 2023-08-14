@@ -73,7 +73,9 @@ pub struct IncludeMechanism {
     /// RDATA of a single DNS TXT resource record
     pub raw_rdata: String,
 }
-pub struct MxMechanism {}
+pub struct MxMechanism {
+    pub hosts: Vec<String>,
+}
 pub struct PtrMechanism {}
 pub struct Ip4Mechanism {
     /// IPv4 address or CIDR range
