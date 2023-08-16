@@ -39,24 +39,27 @@ impl FromStr for Mechanism {
 impl Display for Mechanism {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Mechanism::All(_) => write!(f, "all"),
-            Mechanism::Include(incl) => {
-                write!(f, "include:{}", incl.domain_spec)
-            }
-            Mechanism::A(a) => write!(f, "a:{}", a.raw_value),
-            Mechanism::Mx(_) => write!(f, "mx"),
-            Mechanism::Ptr(_) => write!(f, "ptr"),
-            Mechanism::Ip4(ip) => write!(f, "{}", ip.raw_value),
-            Mechanism::Ip6(ip) => write!(f, "{}", ip.raw_value),
-            Mechanism::Exists(_) => write!(f, "exists"),
+            Mechanism::All(m) => write!(f, "{}", m.raw_value),
+            Mechanism::Include(m) => write!(f, "{}", m.raw_value),
+            Mechanism::A(m) => write!(f, "{}", m.raw_value),
+            Mechanism::Mx(m) => write!(f, "{}", m.raw_value),
+            Mechanism::Ptr(m) => write!(f, "{}", m.raw_value),
+            Mechanism::Ip4(m) => write!(f, "{}", m.raw_value),
+            Mechanism::Ip6(m) => write!(f, "{}", m.raw_value),
+            Mechanism::Exists(m) => write!(f, "{}", m.raw_value),
         }
     }
 }
 
-pub struct AllMechanism {}
+pub struct AllMechanism {
+    /// The raw value of the mechanism
+    pub raw_value: String,
+}
 
 pub struct AMechanism {
+    /// The raw value of the mechanism
     pub raw_value: String,
+
     pub ip_addresses: Vec<IpAddr>,
 
     /// Subnet mask
@@ -64,6 +67,9 @@ pub struct AMechanism {
 }
 
 pub struct IncludeMechanism {
+    /// The raw value of the mechanism
+    pub raw_value: String,
+
     /// The version of the SPF record (e.g. "spf1")
     pub version: Version,
 
@@ -77,12 +83,18 @@ pub struct IncludeMechanism {
     pub raw_rdata: String,
 }
 pub struct MxMechanism {
+    /// The raw value of the mechanism
+    pub raw_value: String,
+
     pub hosts: Vec<String>,
 
     /// Subnet mask
     pub subnet_mask: Option<u8>,
 }
-pub struct PtrMechanism {}
+pub struct PtrMechanism {
+    /// The raw value of the mechanism
+    pub raw_value: String,
+}
 pub struct Ip4Mechanism {
     /// The raw value of the mechanism
     pub raw_value: String,
@@ -103,4 +115,7 @@ pub struct Ip6Mechanism {
     /// Subnet mask
     pub subnet_mask: Option<u8>,
 }
-pub struct ExistsMechanism {}
+pub struct ExistsMechanism {
+    /// The raw value of the mechanism
+    pub raw_value: String,
+}
