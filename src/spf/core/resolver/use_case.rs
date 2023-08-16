@@ -190,7 +190,8 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         Term::Directive(Directive {
             qualifier,
             mechanism: Mechanism::Ip4(Ip4Mechanism {
-                ip_address: ip_address.to_string(),
+                raw_value: term.to_string(),
+                ip_address: ip_address.parse().expect("IPv4 address"),
                 subnet_mask: subnet_mask.parse().ok(),
             }),
         })
@@ -202,7 +203,8 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         Term::Directive(Directive {
             qualifier,
             mechanism: Mechanism::Ip6(Ip6Mechanism {
-                ip_address: ip_address.to_string(),
+                raw_value: term.to_string(),
+                ip_address: ip_address.parse().expect("IPv6 address"),
                 subnet_mask: subnet_mask.parse().ok(),
             }),
         })

@@ -1,7 +1,7 @@
 use crate::spf::domain::term::Term;
 use crate::spf::domain::version::Version;
 use std::fmt::{Display, Formatter};
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
 pub enum Mechanism {
@@ -46,8 +46,8 @@ impl Display for Mechanism {
             Mechanism::A(a) => write!(f, "a:{}", a.raw_value),
             Mechanism::Mx(_) => write!(f, "mx"),
             Mechanism::Ptr(_) => write!(f, "ptr"),
-            Mechanism::Ip4(ip) => write!(f, "ip4:{}", ip.ip_address),
-            Mechanism::Ip6(ip) => write!(f, "ip6:{}", ip.ip_address),
+            Mechanism::Ip4(ip) => write!(f, "{}", ip.raw_value),
+            Mechanism::Ip6(ip) => write!(f, "{}", ip.raw_value),
             Mechanism::Exists(_) => write!(f, "exists"),
         }
     }
@@ -84,15 +84,21 @@ pub struct MxMechanism {
 }
 pub struct PtrMechanism {}
 pub struct Ip4Mechanism {
-    /// IPv4 address or CIDR range
-    pub ip_address: String,
+    /// The raw value of the mechanism
+    pub raw_value: String,
+
+    /// IPv4 address
+    pub ip_address: Ipv4Addr,
 
     /// Subnet mask
     pub subnet_mask: Option<u8>,
 }
 pub struct Ip6Mechanism {
-    /// IPv6 address or CIDR range
-    pub ip_address: String,
+    /// The raw value of the mechanism
+    pub raw_value: String,
+
+    /// IPv6 address
+    pub ip_address: Ipv6Addr,
 
     /// Subnet mask
     pub subnet_mask: Option<u8>,
