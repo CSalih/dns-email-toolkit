@@ -1,7 +1,7 @@
 use crate::spf::domain::term::Term;
 use crate::spf::domain::version::Version;
 use std::fmt::{Display, Formatter};
-use std::net::{IpAddr, Ipv4Addr};
+use std::net::IpAddr;
 use std::str::FromStr;
 
 pub enum Mechanism {

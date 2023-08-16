@@ -4,7 +4,6 @@ use domain::base::{Dname, Rtype};
 use domain::rdata::{AllRecordData, Mx};
 use domain::resolv::StubResolver;
 use std::error::Error;
-use std::net::IpAddr;
 use std::str::FromStr;
 use std::thread;
 
