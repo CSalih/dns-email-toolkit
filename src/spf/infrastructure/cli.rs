@@ -34,9 +34,7 @@ impl CliCommand<Spf> for Spf {
         } else {
             Box::new(SummarySpfTerminalPresenter::new())
         };
-        let mut summary_spf_use_case = SummarySpfUseCaseImpl::new(
-            &mut dns_resolver_gateway
-        );
+        let mut summary_spf_use_case = SummarySpfUseCaseImpl::new(&mut dns_resolver_gateway);
 
         let query = SummarySpfQuery {
             domain_name: self.domain.to_owned(),
