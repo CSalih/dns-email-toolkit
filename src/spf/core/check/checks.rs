@@ -3,7 +3,7 @@ use crate::spf::domain::{CheckError, Mechanism, Term};
 /// Records that are too long to fit in a single UDP packet
 /// MAY be silently ignored by SPF clients.
 pub fn check_max_txt_length(rdata: &str) -> Result<(), CheckError> {
-    const MAX_TXT_LENGTH: usize = 2;
+    const MAX_TXT_LENGTH: usize = 450;
     if rdata.len() > MAX_TXT_LENGTH {
         Err(CheckError {
             summary: "Max TXT length exceeded".to_string(),
