@@ -119,6 +119,7 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         domain_name: &str,
     ) -> Term {
         let (_, domain_name) = term.split_once(':').unwrap_or((term, domain_name));
+        let (domain_name, subnet_mask) = domain_name.split_once('/').unwrap_or((domain_name, ""));
 
         let a_record = self.dns_resolver.query_a(&ARecordQuery {
             domain_name: domain_name.to_string(),
@@ -130,6 +131,7 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
             mechanism: Mechanism::A(AMechanism {
                 ip_addresses: record.ip_addresses,
                 raw_value: domain_name.to_string(),
+                subnet_mask: subnet_mask.parse().ok(),
             }),
         })
     }
@@ -141,6 +143,7 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         domain_name: &str,
     ) -> Term {
         let (_, domain_name) = term.split_once(':').unwrap_or((term, domain_name));
+        let (domain_name, subnet_mask) = domain_name.split_once('/').unwrap_or((domain_name, ""));
 
         let a_record = self.dns_resolver.query_mx(&MxRecordQuery {
             domain_name: domain_name.to_string(),
@@ -151,6 +154,7 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
             qualifier,
             mechanism: Mechanism::Mx(MxMechanism {
                 hosts: record.exchanges,
+                subnet_mask: subnet_mask.parse().ok(),
             }),
         })
     }
@@ -181,21 +185,25 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
 
     fn to_ipv4_term(&self, qualifier: Option<QualifierType>, term: &str) -> Term {
         let (_, ip_address) = term.split_once(':').unwrap_or((term, ""));
+        let (ip_address, subnet_mask) = ip_address.split_once('/').unwrap_or((ip_address, ""));
 
         Term::Directive(Directive {
             qualifier,
             mechanism: Mechanism::Ip4(Ip4Mechanism {
                 ip_address: ip_address.to_string(),
+                subnet_mask: subnet_mask.parse().ok(),
             }),
         })
     }
     fn to_ipv6_term(&self, qualifier: Option<QualifierType>, term: &str) -> Term {
         let (_, ip_address) = term.split_once(':').unwrap_or((term, ""));
+        let (ip_address, subnet_mask) = ip_address.split_once('/').unwrap_or((ip_address, ""));
 
         Term::Directive(Directive {
             qualifier,
             mechanism: Mechanism::Ip6(Ip6Mechanism {
                 ip_address: ip_address.to_string(),
+                subnet_mask: subnet_mask.parse().ok(),
             }),
         })
     }
