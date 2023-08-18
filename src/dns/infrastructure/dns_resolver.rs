@@ -39,15 +39,7 @@ impl DnsResolver for DomainDnsResolver {
                             println!("{} is an alias for {}", answer.qname(), canon);
                         }
 
-                        let ip_addresses = answer
-                            .iter()
-                            .map(|addr| match addr {
-                                IpAddr::V4(ip) => ip,
-                                IpAddr::V6(_) => {
-                                    panic!("DNS resolver for a records does not support IPv6")
-                                }
-                            })
-                            .collect::<Vec<_>>();
+                        let ip_addresses = answer.iter().collect::<Vec<_>>();
                         Ok(ip_addresses)
                     }
                     Err(err) => Err(Box::new(err)),

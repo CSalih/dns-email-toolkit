@@ -1,7 +1,7 @@
-use std::net::Ipv4Addr;
+use std::net::IpAddr;
 
 pub struct ARecord {
-    pub ip_addresses: Vec<Ipv4Addr>,
+    pub ip_addresses: Vec<IpAddr>,
 }
 
 pub struct TxtRecord {
