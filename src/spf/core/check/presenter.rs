@@ -86,6 +86,24 @@ impl SummarySpfWithDetailTerminalPresenter {
                     };
 
                     println!("{} MX: {}", tabs, &hosts);
+                } else if let Mechanism::Ip4(i) = &t.mechanism {
+                    let tabs = format!("{}\t", indent);
+                    let ip_address = if let Some(mask) = i.subnet_mask {
+                        format!("{}/{}", i.ip_address, mask)
+                    } else {
+                        i.ip_address.to_string()
+                    };
+
+                    println!("{} IPv4: {}", tabs, &ip_address);
+                } else if let Mechanism::Ip6(i) = &t.mechanism {
+                    let tabs = format!("{}\t", indent);
+                    let ip_address = if let Some(mask) = i.subnet_mask {
+                        format!("{}/{}", i.ip_address, mask)
+                    } else {
+                        i.ip_address.to_string()
+                    };
+
+                    println!("{} IPv6: {}", tabs, &ip_address);
                 }
             }
             Term::Modifier(_) => {
