@@ -62,7 +62,10 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
         };
 
         if spf_rdata.is_none() {
-            return Err(SpfError::NoSpfRecordFound);
+            return Err(SpfError::NoSpfRecordFound(format!(
+                "No SPF record found for '{}'",
+                query.domain_name
+            )));
         }
 
         let raw_rdata = spf_rdata.unwrap();
