@@ -18,6 +18,22 @@ pub fn check_max_txt_length(rdata: &str) -> Result<(), CheckError> {
     }
 }
 
+/// The character content of the record must be encoded as US-ASCII
+pub fn check_is_ascii(rdata: &str) -> Result<(), CheckError> {
+    if rdata.is_ascii() {
+        Ok(())
+    } else {
+        let non_ascii_chars = rdata.chars().filter(|c| !c.is_ascii()).collect::<String>();
+        Err(CheckError {
+            summary: "Invalid SPF record".to_string(),
+            description: format!(
+                "SPF record contains non-ASCII characters! Following characters are not valid: '{}'",
+                non_ascii_chars
+            ),
+        })
+    }
+}
+
 pub fn check_version(rdata: &str) -> Result<(), CheckError> {
     let version = rdata.split(' ').next().unwrap_or("");
     match version {
