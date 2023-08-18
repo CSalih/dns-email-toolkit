@@ -1,6 +1,8 @@
 use crate::common::presenter::Presenter;
 use crate::dns::core::dns_resolver::DnsResolver;
-use crate::spf::core::check::checks::{check_lookup_count, check_max_txt_length, check_version};
+use crate::spf::core::check::checks::{
+    check_is_ascii, check_lookup_count, check_max_txt_length, check_version,
+};
 use crate::spf::core::resolver::use_case::{ResolveSpfQuery, ResolveSpfUseCase};
 use crate::spf::core::ResolveSpfUseCaseImpl;
 use crate::spf::domain::{SpfError, Term, Version};
@@ -63,6 +65,9 @@ impl<'a> SummarySpfUseCase for SummarySpfUseCaseImpl<'a> {
         // checks
         let mut check_errors: Vec<SpfError> = vec![];
         if let Err(err) = check_max_txt_length(&spf_summary.raw_rdata) {
+            check_errors.push(err.into());
+        }
+        if let Err(err) = check_is_ascii(&spf_summary.raw_rdata) {
             check_errors.push(err.into());
         }
         if let Err(err) = check_version(&spf_summary.raw_rdata) {
