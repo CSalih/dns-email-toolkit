@@ -83,19 +83,33 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
                     (None, term)
                 };
 
-                match term {
-                    term if mechanism_str.starts_with("include:") => {
-                        self.to_include_term_mut(qualifier, term)
+                match mechanism_str {
+                    mechanism_str if mechanism_str.starts_with("include:") => {
+                        self.to_include_term_mut(qualifier, mechanism_str)
                     }
-                    term if mechanism_str == "a" || mechanism_str.starts_with("a:") => {
-                        self.to_a_term_mut(qualifier, term, query.domain_name.clone().as_str())
+                    mechanism_str if mechanism_str == "a" || mechanism_str.starts_with("a:") => {
+                        self.to_a_term_mut(
+                            qualifier,
+                            mechanism_str,
+                            query.domain_name.clone().as_str(),
+                        )
                     }
-                    term if mechanism_str == "mx" || mechanism_str.starts_with("mx:") => {
-                        self.to_mx_term_mut(qualifier, term, query.domain_name.clone().as_str())
+                    mechanism_str if mechanism_str == "mx" || mechanism_str.starts_with("mx:") => {
+                        self.to_mx_term_mut(
+                            qualifier,
+                            mechanism_str,
+                            query.domain_name.clone().as_str(),
+                        )
                     }
-                    term if mechanism_str.starts_with("ip4:") => self.to_ipv4_term(qualifier, term),
-                    term if mechanism_str.starts_with("ip6:") => self.to_ipv6_term(qualifier, term),
-                    term if mechanism_str == "all" => self.to_all(qualifier, term),
+                    mechanism_str if mechanism_str.starts_with("ip4:") => {
+                        self.to_ipv4_term(qualifier, mechanism_str)
+                    }
+                    mechanism_str if mechanism_str.starts_with("ip6:") => {
+                        self.to_ipv6_term(qualifier, mechanism_str)
+                    }
+                    mechanism_str if mechanism_str == "all" => {
+                        self.to_all(qualifier, mechanism_str)
+                    }
                     _ => Term::Unknown(UnknownTerm {
                         raw_rdata: term.to_string(),
                     }),
@@ -129,8 +143,8 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         Term::Directive(Directive {
             qualifier,
             mechanism: Mechanism::A(AMechanism {
+                raw_value: term.to_string(),
                 ip_addresses: record.ip_addresses,
-                raw_value: domain_name.to_string(),
                 subnet_mask: subnet_mask.parse().ok(),
             }),
         })
@@ -153,6 +167,7 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         Term::Directive(Directive {
             qualifier,
             mechanism: Mechanism::Mx(MxMechanism {
+                raw_value: term.to_string(),
                 hosts: record.exchanges,
                 subnet_mask: subnet_mask.parse().ok(),
             }),
@@ -174,6 +189,7 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
             Ok(spf) => Term::Directive(Directive {
                 qualifier,
                 mechanism: Mechanism::Include(IncludeMechanism {
+                    raw_value: term.to_string(),
                     version: spf.version,
                     domain_spec: sub_domain_name.to_string(),
                     terms: spf.terms,
@@ -209,10 +225,12 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
             }),
         })
     }
-    fn to_all(&self, qualifier: Option<QualifierType>, _term: &str) -> Term {
+    fn to_all(&self, qualifier: Option<QualifierType>, term: &str) -> Term {
         Term::Directive(Directive {
             qualifier,
-            mechanism: Mechanism::All(AllMechanism {}),
+            mechanism: Mechanism::All(AllMechanism {
+                raw_value: term.to_string(),
+            }),
         })
     }
 }
