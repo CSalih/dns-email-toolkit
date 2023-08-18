@@ -58,6 +58,9 @@ pub struct AllMechanism {}
 pub struct AMechanism {
     pub raw_value: String,
     pub ip_addresses: Vec<IpAddr>,
+
+    /// Subnet mask
+    pub subnet_mask: Option<u8>,
 }
 
 pub struct IncludeMechanism {
@@ -75,14 +78,23 @@ pub struct IncludeMechanism {
 }
 pub struct MxMechanism {
     pub hosts: Vec<String>,
+
+    /// Subnet mask
+    pub subnet_mask: Option<u8>,
 }
 pub struct PtrMechanism {}
 pub struct Ip4Mechanism {
     /// IPv4 address or CIDR range
     pub ip_address: String,
+
+    /// Subnet mask
+    pub subnet_mask: Option<u8>,
 }
 pub struct Ip6Mechanism {
     /// IPv6 address or CIDR range
     pub ip_address: String,
+
+    /// Subnet mask
+    pub subnet_mask: Option<u8>,
 }
 pub struct ExistsMechanism {}

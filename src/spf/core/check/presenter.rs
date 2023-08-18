@@ -58,19 +58,34 @@ impl SummarySpfWithDetailTerminalPresenter {
                 } else if let Mechanism::A(i) = &t.mechanism {
                     let tabs = format!("{}\t", indent);
 
-                    println!(
-                        "{} IP: {}",
-                        tabs,
-                        &i.ip_addresses
+                    let ip_addresses = if let Some(mask) = i.subnet_mask {
+                        i.ip_addresses
+                            .iter()
+                            .map(|ip| format!("{}/{}", ip, mask))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    } else {
+                        i.ip_addresses
                             .iter()
                             .map(|ip| ip.to_string())
-                            .collect::<Vec<String>>()
+                            .collect::<Vec<_>>()
                             .join(", ")
-                    );
+                    };
+
+                    println!("{} IP: {}", tabs, ip_addresses);
                 } else if let Mechanism::Mx(i) = &t.mechanism {
                     let tabs = format!("{}\t", indent);
+                    let hosts = if let Some(mask) = i.subnet_mask {
+                        i.hosts
+                            .iter()
+                            .map(|h| format!("{}/{}", h, mask))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    } else {
+                        i.hosts.join(", ")
+                    };
 
-                    println!("{} MX: {}", tabs, &i.hosts.join(", "));
+                    println!("{} MX: {}", tabs, &hosts);
                 }
             }
             Term::Modifier(_) => {
