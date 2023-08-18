@@ -1,6 +1,6 @@
 use crate::common::presenter::Presenter;
 use crate::spf::core::check::use_case::SpfSummary;
-use crate::spf::domain::{Mechanism, Term};
+use crate::spf::domain::{Mechanism, SpfError, Term};
 
 #[derive(Default)]
 pub struct SummarySpfTerminalPresenter {}
@@ -11,13 +11,13 @@ impl SummarySpfTerminalPresenter {
     }
 }
 
-impl Presenter<SpfSummary, String> for SummarySpfTerminalPresenter {
-    fn success(&mut self, data: SpfSummary) {
+impl Presenter<SpfSummary, SpfError> for SummarySpfTerminalPresenter {
+    fn success(&mut self, data: &SpfSummary) {
         println!("Raw Record: '{}'", data.raw_rdata);
         println!("SPF looks good");
     }
-    fn error(&mut self, error: String) {
-        eprintln!("Error: {:?}", error);
+    fn error(&mut self, error: &SpfError) {
+        print_spf_error(error);
     }
 }
 
@@ -30,8 +30,8 @@ impl SummarySpfWithDetailTerminalPresenter {
     }
 }
 
-impl Presenter<SpfSummary, String> for SummarySpfWithDetailTerminalPresenter {
-    fn success(&mut self, data: SpfSummary) {
+impl Presenter<SpfSummary, SpfError> for SummarySpfWithDetailTerminalPresenter {
+    fn success(&mut self, data: &SpfSummary) {
         println!("Raw Record: '{}'", data.raw_rdata);
 
         // TODO: this should be enabled with a "detail" flag
@@ -39,8 +39,8 @@ impl Presenter<SpfSummary, String> for SummarySpfWithDetailTerminalPresenter {
             Self::recursive_print("", &data.terms)
         }
     }
-    fn error(&mut self, error: String) {
-        eprintln!("Error: {:?}", error);
+    fn error(&mut self, error: &SpfError) {
+        print_spf_error(error);
     }
 }
 
@@ -113,5 +113,17 @@ impl SummarySpfWithDetailTerminalPresenter {
                 println!("{}- Unknown term: {}", indent, u.raw_rdata);
             }
         });
+    }
+}
+
+fn print_spf_error(error: &SpfError) {
+    match error {
+        SpfError::NoSpfRecordFound(message) => {
+            eprintln!("Error: {}", message);
+        }
+        SpfError::CheckFailed(err) => {
+            eprintln!("Check failed: {}", err.summary);
+            eprintln!("\t {}", err.description);
+        }
     }
 }

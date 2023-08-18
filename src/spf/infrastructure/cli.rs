@@ -2,6 +2,7 @@ use std::error::Error;
 
 use clap::Args;
 
+use crate::spf::domain::SpfError;
 use crate::{
     common::{cli::CliCommand, presenter::Presenter},
     dns::infrastructure::dns_resolver::DomainDnsResolver,
@@ -29,7 +30,7 @@ pub struct Spf {
 impl CliCommand<Spf> for Spf {
     fn execute(&self) -> Result<(), Box<dyn Error>> {
         let mut dns_resolver_gateway = DomainDnsResolver::new();
-        let presenter: Box<dyn Presenter<SpfSummary, String>> = if self.detail {
+        let presenter: Box<dyn Presenter<SpfSummary, SpfError>> = if self.detail {
             Box::new(SummarySpfWithDetailTerminalPresenter::new())
         } else {
             Box::new(SummarySpfTerminalPresenter::new())
