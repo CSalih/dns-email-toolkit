@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["checks","presenter","use_case"],"struct":["SpfSummary","SummarySpfQuery","SummarySpfTerminalPresenter","SummarySpfUseCaseImpl","SummarySpfWithDetailTerminalPresenter"],"trait":["SummarySpfUseCase"]};

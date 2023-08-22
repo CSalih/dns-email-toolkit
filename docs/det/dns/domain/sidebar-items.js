@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["record"],"struct":["ARecord","MxRecord","TxtRecord"]};

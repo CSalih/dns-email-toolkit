@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"det":[["impl Args for <a class=\"struct\" href=\"det/struct.Cli.html\" title=\"struct det::Cli\">Cli</a>"],["impl Args for <a class=\"struct\" href=\"det/spf/infrastructure/cli/struct.Spf.html\" title=\"struct det::spf::infrastructure::cli::Spf\">Spf</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

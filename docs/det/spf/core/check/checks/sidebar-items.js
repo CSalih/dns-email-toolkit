@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_LOOKUP_COUNT","MAX_TXT_LENGTH"],"fn":["check_is_ascii","check_lookup_count","check_max_txt_length","check_version","count_lookup"]};

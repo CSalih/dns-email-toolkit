@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"det":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.70.0/core/fmt/trait.Debug.html\" title=\"trait core::fmt::Debug\">Debug</a> for <a class=\"struct\" href=\"det/spf/domain/error/struct.CheckError.html\" title=\"struct det::spf::domain::error::CheckError\">CheckError</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.70.0/core/fmt/trait.Debug.html\" title=\"trait core::fmt::Debug\">Debug</a> for <a class=\"enum\" href=\"det/spf/domain/error/enum.SpfError.html\" title=\"enum det::spf::domain::error::SpfError\">SpfError</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

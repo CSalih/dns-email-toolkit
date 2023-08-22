@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Mechanism","QualifierType","SpfError","Term"],"mod":["directive","error","mechanism","modifier","qualifier","term","version"],"struct":["AMechanism","AllMechanism","CheckError","Directive","IncludeMechanism","Ip4Mechanism","Ip6Mechanism","MxMechanism","UnknownTerm","Version"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["ResolveSpfQuery","ResolveSpfUseCaseImpl","SpfAnswer"],"trait":["ResolveSpfUseCase"]};

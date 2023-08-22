@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["print_spf_error"],"struct":["SummarySpfTerminalPresenter","SummarySpfWithDetailTerminalPresenter"]};
