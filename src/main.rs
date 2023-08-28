@@ -27,6 +27,7 @@ use std::error::Error;
 
 use clap::{Parser, Subcommand};
 use common::cli::CliCommand;
+use simple_logger::SimpleLogger;
 
 use crate::spf::infrastructure::cli::Spf;
 
@@ -53,6 +54,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    SimpleLogger::new().init().unwrap();
     let args = Cli::parse();
 
     match &args.command {
