@@ -1,4 +1,4 @@
-use crate::spf::domain::{CheckError, Mechanism, Term};
+use crate::spf::domain::{CheckError, Mechanism, Term, UnknownTerm};
 
 /// Records that are too long to fit in a single UDP packet
 /// MAY be silently ignored by SPF clients.
@@ -53,6 +53,24 @@ pub fn check_version(rdata: &str) -> Result<(), CheckError> {
     }
 }
 
+pub fn check_has_unknown_term(terms: &[Term], _raw_rdata: &str) -> Result<bool, CheckError> {
+    let unknown_term = terms.iter().find(|term| matches!(term, Term::Unknown(_)));
+
+    if let Some(unknown_term) = unknown_term {
+        let raw_value = match unknown_term {
+            Term::Unknown(UnknownTerm { raw_rdata }) => raw_rdata,
+            _ => unreachable!("we already filtered unknown terms"),
+        };
+
+        Err(CheckError {
+            summary: "SPF record contains an unknown term".to_string(),
+            description: format!("{} is an unknown term", raw_value),
+        })
+    } else {
+        Ok(true)
+    }
+}
+
 pub fn check_lookup_count(terms: &[Term], _raw_rdata: &str) -> Result<usize, CheckError> {
     const MAX_LOOKUP_COUNT: usize = 10;
 
@@ -88,4 +106,36 @@ fn count_lookup(terms: &[Term]) -> usize {
         .sum();
 
     current_count
+}
+
+#[cfg(test)]
+mod test {
+    use crate::spf::domain::{AllMechanism, Directive};
+
+    use super::*;
+
+    #[test]
+    fn test_unknown_term_check_returns_err() {
+        let terms = vec![Term::Unknown(UnknownTerm {
+            raw_rdata: "foo".to_string(),
+        })];
+
+        let result = check_has_unknown_term(&terms, "");
+
+        assert!(matches!(result, Err(_)));
+    }
+
+    #[test]
+    fn test_unknown_term_check_returns_ok() {
+        let terms = vec![Term::Directive(Directive {
+            mechanism: Mechanism::All(AllMechanism {
+                raw_value: "all".to_string(),
+            }),
+            qualifier: None,
+        })];
+
+        let result = check_has_unknown_term(&terms, "").unwrap_or(false);
+
+        assert!(result);
+    }
 }
