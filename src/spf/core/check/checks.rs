@@ -1,4 +1,4 @@
-use crate::spf::domain::{CheckError, Mechanism, Term, UnknownTerm};
+use crate::spf::domain::{CheckError, Mechanism, Modifier, Term, UnknownTerm};
 
 /// Records that are too long to fit in a single UDP packet
 /// MAY be silently ignored by SPF clients.
@@ -71,6 +71,58 @@ pub fn check_has_unknown_term(terms: &[Term], _raw_rdata: &str) -> Result<bool, 
     }
 }
 
+pub fn check_all_is_rightmost(terms: &[Term], _raw_rdata: &str) -> Result<(), CheckError> {
+    let directive_all_index = terms.iter().position(|term| match term {
+        Term::Directive(d) => matches!(d.mechanism, Mechanism::All(_)),
+        _ => false,
+    });
+
+    let Some(is_last) = directive_all_index else {
+        return Ok(());
+    };
+
+    let ignored_terms = terms
+        .iter()
+        .skip(is_last + 1)
+        .filter_map(|t| match t {
+            Term::Directive(d) => Some(d.mechanism.to_string()),
+            _ => None,
+        })
+        .collect::<Vec<String>>();
+
+    if ignored_terms.is_empty() {
+        Ok(())
+    } else {
+        Err(CheckError {
+            summary: "Mechanisms after 'all' will be ignored".to_string(),
+            description: format!(
+                "Ignored terms: {}. Use 'all' mechanism as rightmost one",
+                ignored_terms.join(", "),
+            ),
+        })
+    }
+}
+
+pub fn check_no_redirect_with_all(terms: &[Term], _raw_rdata: &str) -> Result<(), CheckError> {
+    let has_all_directive = terms.iter().any(|term| match term {
+        Term::Directive(d) => matches!(d.mechanism, Mechanism::All(_)),
+        _ => false,
+    });
+    let has_redirect_modifier = terms
+        .iter()
+        .any(|term| matches!(term, Term::Modifier(Modifier::Redirect(_))));
+
+    if has_all_directive && has_redirect_modifier {
+        Err(CheckError {
+            summary: "SPF record contains 'all' directive and 'redirect' modifier".to_string(),
+            description: "'redirect' modifier is ignored when 'all' directive is present"
+                .to_string(),
+        })
+    } else {
+        Ok(())
+    }
+}
+
 pub fn check_lookup_count(terms: &[Term], _raw_rdata: &str) -> Result<usize, CheckError> {
     const MAX_LOOKUP_COUNT: usize = 10;
 
@@ -110,7 +162,7 @@ fn count_lookup(terms: &[Term]) -> usize {
 
 #[cfg(test)]
 mod test {
-    use crate::spf::domain::{AllMechanism, Directive};
+    use crate::spf::domain::{AMechanism, AllMechanism, Directive, RedirectModifier};
 
     use super::*;
 
@@ -119,10 +171,9 @@ mod test {
         let terms = vec![Term::Unknown(UnknownTerm {
             raw_rdata: "foo".to_string(),
         })];
-
         let result = check_has_unknown_term(&terms, "");
 
-        assert!(matches!(result, Err(_)));
+        assert!(result.is_err());
     }
 
     #[test]
@@ -133,9 +184,111 @@ mod test {
             }),
             qualifier: None,
         })];
-
         let result = check_has_unknown_term(&terms, "").unwrap_or(false);
 
         assert!(result);
+    }
+
+    #[test]
+    fn test_redirect_with_all_returns_err() {
+        let terms = vec![
+            Term::Directive(Directive {
+                mechanism: Mechanism::All(AllMechanism {
+                    raw_value: "all".to_string(),
+                }),
+                qualifier: None,
+            }),
+            Term::Modifier(Modifier::Redirect(RedirectModifier {
+                domain_spec: "example.com".to_string(),
+            })),
+        ];
+        let result = check_no_redirect_with_all(&terms, "");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_redirect_without_all_returns_ok() {
+        let terms = vec![Term::Modifier(Modifier::Redirect(RedirectModifier {
+            domain_spec: "example.com".to_string(),
+        }))];
+        let result = check_no_redirect_with_all(&terms, "");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_all_without_redirect_returns_ok() {
+        let terms = vec![Term::Directive(Directive {
+            mechanism: Mechanism::All(AllMechanism {
+                raw_value: "all".to_string(),
+            }),
+            qualifier: None,
+        })];
+        let result = check_no_redirect_with_all(&terms, "");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_without_all_and_without_redirect_returns_ok() {
+        let terms = vec![];
+        let result = check_no_redirect_with_all(&terms, "");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_all_is_not_rightmost_returns_err() {
+        let terms = vec![
+            Term::Directive(Directive {
+                mechanism: Mechanism::All(AllMechanism {
+                    raw_value: "all".to_string(),
+                }),
+                qualifier: None,
+            }),
+            Term::Directive(Directive {
+                mechanism: Mechanism::A(AMechanism {
+                    raw_value: "a".to_string(),
+                    ip_addresses: vec![],
+                    subnet_mask: None,
+                }),
+                qualifier: None,
+            }),
+        ];
+        let result = check_all_is_rightmost(&terms, "");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_all_is_rightmost_returns_ok() {
+        let terms = vec![
+            Term::Directive(Directive {
+                mechanism: Mechanism::A(AMechanism {
+                    raw_value: "a".to_string(),
+                    ip_addresses: vec![],
+                    subnet_mask: None,
+                }),
+                qualifier: None,
+            }),
+            Term::Directive(Directive {
+                mechanism: Mechanism::All(AllMechanism {
+                    raw_value: "all".to_string(),
+                }),
+                qualifier: None,
+            }),
+        ];
+        let result = check_all_is_rightmost(&terms, "");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_without_all_rightmost_returns_ok() {
+        let terms = vec![];
+        let result = check_all_is_rightmost(&terms, "");
+
+        assert!(result.is_ok());
     }
 }
