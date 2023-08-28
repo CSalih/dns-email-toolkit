@@ -7,6 +7,8 @@ use crate::spf::core::resolver::use_case::{ResolveSpfQuery, ResolveSpfUseCase};
 use crate::spf::core::ResolveSpfUseCaseImpl;
 use crate::spf::domain::{SpfError, Term, Version};
 
+use super::checks::check_has_unknown_term;
+
 pub trait SummarySpfUseCase {
     /// Summary the SPF record of a domain name.
     fn execute(
@@ -74,6 +76,9 @@ impl<'a> SummarySpfUseCase for SummarySpfUseCaseImpl<'a> {
             check_errors.push(err.into());
         }
         if let Err(err) = check_lookup_count(&spf_summary.terms, &spf_summary.raw_rdata) {
+            check_errors.push(err.into());
+        }
+        if let Err(err) = check_has_unknown_term(&spf_summary.terms, &spf_summary.raw_rdata) {
             check_errors.push(err.into());
         }
 
