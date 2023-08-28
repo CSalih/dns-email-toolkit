@@ -41,7 +41,7 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
 
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -56,3 +56,5 @@ jobs:
           key: cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
         run: cargo build --verbose
+      - name: Unit tests
+        run: cargo test --verbose

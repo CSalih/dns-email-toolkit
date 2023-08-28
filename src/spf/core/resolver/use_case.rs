@@ -237,3 +237,333 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         })
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use mockall::mock;
+
+    use crate::dns::core::dns_resolver::{
+        ARecordQuery, DnsResolver, MxRecordQuery, TxtRecordQuery,
+    };
+    use crate::dns::domain::{ARecord, MxRecord, TxtRecord};
+    use std::error::Error;
+    use std::net::IpAddr;
+
+    mock! {
+        pub DnsResolver {}
+
+        impl DnsResolver for DnsResolver {
+            fn query_a(&mut self, query: &ARecordQuery) -> Result<ARecord, Box<dyn Error>>;
+            fn query_txt(&mut self, query: &TxtRecordQuery) -> Result<TxtRecord, Box<dyn Error>>;
+            fn query_mx(&mut self, query: &MxRecordQuery) -> Result<MxRecord, Box<dyn Error>>;
+        }
+    }
+
+    #[test]
+    fn it_should_return_no_spf_record_found() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| Ok(TxtRecord { records: vec![] }));
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        assert!(
+            spf_summary.is_err(),
+            "No error was not returned but expected"
+        );
+        match spf_summary.err().unwrap() {
+            SpfError::NoSpfRecordFound(_) => {}
+            _ => panic!("Expected NoSpfRecordFound error but was not returned"),
+        }
+    }
+
+    #[test]
+    fn it_should_return_a_spf_record() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| {
+                Ok(TxtRecord {
+                    records: vec!["v=spf1".to_owned()],
+                })
+            });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        assert!(
+            spf_summary.is_ok(),
+            "SPF Answer was expected but not returned"
+        );
+    }
+
+    #[test]
+    fn it_should_use_the_record_from_query() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver.expect_query_txt().never();
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: Some("v=spf1 -all".to_owned()),
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        assert!(
+            spf_summary.is_ok(),
+            "SPF Answer was expected but not returned"
+        );
+    }
+
+    #[test]
+    fn it_should_be_a_valid_spf_version() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| {
+                Ok(TxtRecord {
+                    records: vec!["v=spf1 -all".to_owned()],
+                })
+            });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_version_str = spf_summary.unwrap().version.version;
+        let expected_version_str = "v=spf1";
+
+        assert_eq!(actual_version_str, expected_version_str);
+    }
+
+    #[test]
+    fn it_should_be_a_valid_include_mechanism() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .times(2)
+            .returning(move |query| {
+                if query.domain_name == "example.com" {
+                    Ok(TxtRecord {
+                        records: vec!["v=spf1 include:_spf.example.com".to_owned()],
+                    })
+                } else {
+                    Ok(TxtRecord {
+                        records: vec!["v=spf1 -all".to_owned()],
+                    })
+                }
+            });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_spf_answer = spf_summary.unwrap();
+
+        assert_eq!(actual_spf_answer.terms.len(), 1);
+        assert!(matches!(
+            actual_spf_answer.terms.first().unwrap(),
+            Term::Directive(e) if matches!(e.mechanism, Mechanism::Include(_))
+        ));
+    }
+
+    #[test]
+    fn it_should_be_a_valid_a_mechanism() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| {
+                Ok(TxtRecord {
+                    records: vec!["v=spf1 a".to_owned()],
+                })
+            });
+        dns_resolver.expect_query_a().once().return_once(move |_| {
+            Ok(ARecord {
+                ip_addresses: vec![IpAddr::from_str("127.0.0.1").unwrap()],
+            })
+        });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_spf_answer = spf_summary.unwrap();
+
+        assert_eq!(actual_spf_answer.terms.len(), 1);
+        assert!(matches!(
+            actual_spf_answer.terms.first().unwrap(),
+            Term::Directive(e) if matches!(e.mechanism, Mechanism::A(_))
+        ));
+    }
+
+    #[test]
+    fn it_should_be_a_valid_mx_mechanism() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| {
+                Ok(TxtRecord {
+                    records: vec!["v=spf1 mx".to_owned()],
+                })
+            });
+        dns_resolver.expect_query_mx().once().return_once(move |_| {
+            Ok(MxRecord {
+                exchanges: vec!["example.com".to_owned()],
+            })
+        });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_spf_answer = spf_summary.unwrap();
+
+        assert_eq!(actual_spf_answer.terms.len(), 1);
+        assert!(matches!(
+            actual_spf_answer.terms.first().unwrap(),
+            Term::Directive(e) if matches!(e.mechanism, Mechanism::Mx(_))
+        ));
+    }
+
+    #[test]
+    fn it_should_be_a_valid_ip4_mechanism() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| {
+                Ok(TxtRecord {
+                    records: vec!["v=spf1 ip4:127.0.0.1".to_owned()],
+                })
+            });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_spf_answer = spf_summary.unwrap();
+
+        assert_eq!(actual_spf_answer.terms.len(), 1);
+        assert!(matches!(
+            actual_spf_answer.terms.first().unwrap(),
+            Term::Directive(e) if matches!(e.mechanism, Mechanism::Ip4(_))
+        ));
+    }
+
+    #[test]
+    fn it_should_be_a_valid_ip6_mechanism() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| {
+                Ok(TxtRecord {
+                    records: vec!["v=spf1 ip6:::1".to_owned()],
+                })
+            });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_spf_answer = spf_summary.unwrap();
+
+        assert_eq!(actual_spf_answer.terms.len(), 1);
+        assert!(matches!(
+            actual_spf_answer.terms.first().unwrap(),
+            Term::Directive(e) if matches!(e.mechanism, Mechanism::Ip6(_))
+        ));
+    }
+
+    #[test]
+    fn it_should_be_a_valid_all_mechanism() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .once()
+            .return_once(move |_| {
+                Ok(TxtRecord {
+                    records: vec!["v=spf1 all".to_owned()],
+                })
+            });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_spf_answer = spf_summary.unwrap();
+
+        assert_eq!(actual_spf_answer.terms.len(), 1);
+        assert!(matches!(
+            actual_spf_answer.terms.first().unwrap(),
+            Term::Directive(e) if matches!(e.mechanism, Mechanism::All(_))
+        ));
+    }
+}
