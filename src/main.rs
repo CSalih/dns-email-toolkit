@@ -26,6 +26,7 @@ use std::env;
 use std::error::Error;
 
 use clap::{Parser, Subcommand};
+use clap_verbosity_flag::Verbosity;
 use common::cli::CliCommand;
 use simple_logger::SimpleLogger;
 
@@ -42,6 +43,9 @@ pub mod spf;
     long_about = None
 )]
 struct Cli {
+    #[command(flatten)]
+    verbose: Verbosity,
+
     #[clap(subcommand)]
     command: Commands,
 }
@@ -54,8 +58,11 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    SimpleLogger::new().init().unwrap();
     let args = Cli::parse();
+    SimpleLogger::new()
+        .with_level(args.verbose.log_level_filter())
+        .init()
+        .unwrap();
 
     match &args.command {
         Commands::Spf(spf) => spf.execute(),

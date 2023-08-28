@@ -6,9 +6,10 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.72"
 clap = { version = "4.3.19", features = ["derive"] }
+clap-verbosity-flag = "2.0.1"
 domain = { version = "0.8.0", features = ["resolv", "resolv-sync"] }
 log = "0.4.20"
 mockall = "0.11.4"
 serde = { version = "1.0.152", features = ["derive"] }
-simple_logger = "4.2.0"
+simple_logger = { version = "4.2.0", default-features = false, features = ["colors"] }
 tokio = { version = "1.29.1", features = ["full"] }
