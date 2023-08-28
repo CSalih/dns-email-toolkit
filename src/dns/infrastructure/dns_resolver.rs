@@ -25,7 +25,10 @@ impl Default for DomainDnsResolver {
 impl DnsResolver for DomainDnsResolver {
     fn query_a(&mut self, query: &ARecordQuery) -> Result<ARecord, Box<dyn Error>> {
         let domain_name = Dname::<Vec<_>>::from_str(&query.domain_name).unwrap();
-        println!("[Debug] Try collecting a records for '{}'", domain_name);
+        log::trace!(
+            "Request dns question of type 'a record' for '{}'",
+            domain_name
+        );
 
         let res = thread::spawn(|| {
             return StubResolver::run(move |stub| async move {
@@ -33,12 +36,9 @@ impl DnsResolver for DomainDnsResolver {
 
                 match res {
                     Ok(answer) => {
-                        let canon = answer.canonical_name();
-                        if canon != answer.qname() {
-                            println!("{} is an alias for {}", answer.qname(), canon);
-                        }
-
                         let ip_addresses = answer.iter().collect::<Vec<_>>();
+                        log::debug!("Got dns answer with {} records", ip_addresses.len());
+
                         Ok(ip_addresses)
                     }
                     Err(err) => Err(Box::new(err)),
@@ -58,7 +58,10 @@ impl DnsResolver for DomainDnsResolver {
 
     fn query_txt(&mut self, command: &TxtRecordQuery) -> Result<TxtRecord, Box<dyn Error>> {
         let domain_name = Dname::<Vec<_>>::from_str(&command.domain_name).unwrap();
-        println!("[Debug] Try collecting TXT records for '{}'", domain_name);
+        log::trace!(
+            "Request dns question of type 'txt record' for '{}'",
+            domain_name
+        );
 
         let res = thread::spawn(|| {
             return StubResolver::run(move |stub| async move {
@@ -77,7 +80,7 @@ impl DnsResolver for DomainDnsResolver {
                     .map(|record| record.unwrap().data().to_string().replace("\\32", " "))
                     .collect::<Vec<String>>();
 
-                println!("[Info] Found {} TXT records", records.len());
+                log::debug!("Got dns answer with {} records", records.len());
                 Ok(TxtRecord { records })
             }
             Err(err) => Err(Box::new(err)),
@@ -86,7 +89,10 @@ impl DnsResolver for DomainDnsResolver {
 
     fn query_mx(&mut self, query: &MxRecordQuery) -> Result<MxRecord, Box<dyn Error>> {
         let domain_name = Dname::<Vec<_>>::from_str(&query.domain_name).unwrap();
-        println!("[Debug] Try collecting MX records for '{}'", domain_name);
+        log::trace!(
+            "Request dns question of type 'mx record' for '{}'",
+            domain_name
+        );
 
         let res = thread::spawn(|| {
             return StubResolver::run(move |stub| async move {
@@ -105,7 +111,7 @@ impl DnsResolver for DomainDnsResolver {
                     .map(|record| record.unwrap().data().exchange().to_string())
                     .collect::<Vec<String>>();
 
-                println!("[Info] Found {} MX records", exchanges.len());
+                log::debug!("Got dns answer with {} records", exchanges.len());
                 Ok(MxRecord { exchanges })
             }
             Err(err) => Err(Box::new(err)),
