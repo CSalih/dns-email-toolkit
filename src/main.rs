@@ -22,6 +22,7 @@
 //! det spf example.com --detail
 //! ```
 
+use std::env;
 use std::error::Error;
 
 use clap::{Parser, Subcommand};
@@ -34,7 +35,11 @@ pub mod dns;
 pub mod spf;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author,
+    version = env!("DET_VERSION_FULL"),
+    long_about = None
+)]
 struct Cli {
     #[clap(subcommand)]
     command: Commands,
