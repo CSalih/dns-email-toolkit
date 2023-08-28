@@ -186,7 +186,7 @@ checksum = "7684a49fb1af197853ef7b2ee694bc1f5b4179556f1e5710e1760c5db6f5e929"
 
 [[package]]
 name = "det"
-version = "0.1.0"
+version = "0.1.0-dev.0"
 dependencies = [
  "async-trait",
  "clap",
