@@ -54,17 +54,12 @@ pub fn check_version(rdata: &str) -> Result<(), CheckError> {
 }
 
 pub fn check_has_unknown_term(terms: &[Term], _raw_rdata: &str) -> Result<bool, CheckError> {
-    let unknown_term = terms.iter().find(|term| matches!(term, Term::Unknown(_)));
+    let unknown_terms = first_unknown_term(terms);
 
-    if let Some(unknown_term) = unknown_term {
-        let raw_value = match unknown_term {
-            Term::Unknown(UnknownTerm { raw_rdata }) => raw_rdata,
-            _ => unreachable!("we already filtered unknown terms"),
-        };
-
+    if let Some(unknown_term) = unknown_terms {
         Err(CheckError {
             summary: "SPF record contains an unknown term".to_string(),
-            description: format!("{} is an unknown term", raw_value),
+            description: format!("{} is an unknown term", unknown_term),
         })
     } else {
         Ok(true)
@@ -160,9 +155,27 @@ fn count_lookup(terms: &[Term]) -> usize {
     current_count
 }
 
+fn first_unknown_term(terms: &[Term]) -> Option<&str> {
+    let unknown_terms = terms.iter().filter_map(|term| match term {
+        Term::Directive(d) => {
+            if let Mechanism::Include(i) = &d.mechanism {
+                first_unknown_term(&i.terms)
+            } else {
+                None
+            }
+        }
+        Term::Unknown(UnknownTerm { raw_rdata }) => Some(raw_rdata),
+        _ => None,
+    });
+
+    unknown_terms.to_owned().next()
+}
+
 #[cfg(test)]
 mod test {
-    use crate::spf::domain::{AMechanism, AllMechanism, Directive, RedirectModifier};
+    use crate::spf::domain::{
+        AMechanism, AllMechanism, Directive, IncludeMechanism, RedirectModifier, Version,
+    };
 
     use super::*;
 
@@ -170,6 +183,27 @@ mod test {
     fn test_unknown_term_check_returns_err() {
         let terms = vec![Term::Unknown(UnknownTerm {
             raw_rdata: "foo".to_string(),
+        })];
+        let result = check_has_unknown_term(&terms, "");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_nested_unknown_term_check_returns_err() {
+        let terms = vec![Term::Directive(Directive {
+            mechanism: Mechanism::Include(IncludeMechanism {
+                raw_value: "include:foo".to_string(),
+                version: Version {
+                    version: "".to_string(),
+                },
+                domain_spec: "".to_string(),
+                terms: vec![Term::Unknown(UnknownTerm {
+                    raw_rdata: "foo".to_string(),
+                })],
+                raw_rdata: "".to_string(),
+            }),
+            qualifier: None,
         })];
         let result = check_has_unknown_term(&terms, "");
 
