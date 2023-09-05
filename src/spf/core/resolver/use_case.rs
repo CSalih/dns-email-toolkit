@@ -3,7 +3,7 @@ use std::str::FromStr;
 use crate::dns::core::dns_resolver::{ARecordQuery, DnsResolver, MxRecordQuery, TxtRecordQuery};
 use crate::spf::domain::{
     AMechanism, AllMechanism, Directive, IncludeMechanism, Ip4Mechanism, Ip6Mechanism, Mechanism,
-    MxMechanism, QualifierType, SpfError, Term, UnknownTerm, Version,
+    Modifier, MxMechanism, QualifierType, RedirectModifier, SpfError, Term, UnknownTerm, Version,
 };
 
 pub trait ResolveSpfUseCase {
@@ -113,6 +113,9 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
                     mechanism_str if mechanism_str == "all" => {
                         self.to_all(qualifier, mechanism_str)
                     }
+                    mechanism_str if mechanism_str.starts_with("redirect=") => {
+                        self.to_redirect_term_mut(mechanism_str)
+                    }
                     _ => Term::Unknown(UnknownTerm {
                         raw_rdata: term.to_string(),
                     }),
@@ -202,6 +205,28 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         }
     }
 
+    fn to_redirect_term_mut(&mut self, term: &str) -> Term {
+        let (_, domain_name) = term.split_once('=').unwrap_or((term, ""));
+
+        let spf_summary = self.resolve(&ResolveSpfQuery {
+            domain_name: domain_name.to_string(),
+            record: None,
+        });
+
+        match spf_summary {
+            Err(_) => Term::Unknown(UnknownTerm {
+                raw_rdata: "No spf found".to_string(),
+            }),
+            Ok(spf) => Term::Modifier(Modifier::Redirect(RedirectModifier {
+                raw_value: term.to_string(),
+                version: spf.version,
+                domain_spec: domain_name.to_string(),
+                terms: spf.terms,
+                raw_rdata: spf.raw_rdata,
+            })),
+        }
+    }
+
     fn to_ipv4_term(&self, qualifier: Option<QualifierType>, term: &str) -> Term {
         let (_, ip_address) = term.split_once(':').unwrap_or((term, ""));
         let (ip_address, subnet_mask) = ip_address.split_once('/').unwrap_or((ip_address, ""));
@@ -247,6 +272,7 @@ mod test {
         ARecordQuery, DnsResolver, MxRecordQuery, TxtRecordQuery,
     };
     use crate::dns::domain::{ARecord, MxRecord, TxtRecord};
+    use crate::spf::domain::Term;
     use std::error::Error;
     use std::net::IpAddr;
 
@@ -564,6 +590,43 @@ mod test {
         assert!(matches!(
             actual_spf_answer.terms.first().unwrap(),
             Term::Directive(e) if matches!(e.mechanism, Mechanism::All(_))
+        ));
+    }
+
+    #[test]
+    fn it_should_be_a_valid_redirect_mechanism() {
+        // Arrange
+        let mut dns_resolver = MockDnsResolver::new();
+        dns_resolver
+            .expect_query_txt()
+            .times(2)
+            .returning(move |query| {
+                if query.domain_name == "example.com" {
+                    Ok(TxtRecord {
+                        records: vec!["v=spf1 redirect=_spf.example.com".to_owned()],
+                    })
+                } else {
+                    Ok(TxtRecord {
+                        records: vec!["v=spf1 -all".to_owned()],
+                    })
+                }
+            });
+        let mut spf_resolver = ResolveSpfUseCaseImpl::new(&mut dns_resolver);
+
+        // Act
+        let spf_summary = spf_resolver.resolve(&ResolveSpfQuery {
+            domain_name: "example.com".to_owned(),
+            record: None,
+        });
+
+        // Assert
+        dns_resolver.checkpoint();
+        let actual_spf_answer = spf_summary.unwrap();
+
+        assert_eq!(actual_spf_answer.terms.len(), 1);
+        assert!(matches!(
+            actual_spf_answer.terms.first().unwrap(),
+            Term::Modifier(e) if matches!(e, Modifier::Redirect(_))
         ));
     }
 }

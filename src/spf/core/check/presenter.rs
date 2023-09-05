@@ -1,6 +1,6 @@
 use crate::common::presenter::Presenter;
 use crate::spf::core::check::use_case::SpfSummary;
-use crate::spf::domain::{Mechanism, SpfError, Term};
+use crate::spf::domain::{Mechanism, Modifier, SpfError, Term};
 
 #[derive(Default)]
 pub struct SummarySpfTerminalPresenter {}
@@ -106,8 +106,17 @@ impl SummarySpfWithDetailTerminalPresenter {
                     println!("{} IPv6: {}", tabs, &ip_address);
                 }
             }
-            Term::Modifier(_) => {
-                println!("{}- Modifier not implemented yet", indent);
+            Term::Modifier(m) => {
+                println!("{}- {}", indent, m);
+
+                if let Modifier::Redirect(r) = &m {
+                    let tabs = format!("{}\t", indent);
+
+                    println!("{}Raw Record: {}", tabs, r.raw_rdata);
+                    Self::recursive_print(&tabs, &r.terms);
+                } else {
+                    println!("{}- Modifier '{}' not implemented yet", indent, m);
+                }
             }
             Term::Unknown(u) => {
                 println!("{}- Unknown term: {}", indent, u.raw_rdata);
