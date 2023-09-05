@@ -233,7 +233,13 @@ mod test {
                 qualifier: None,
             }),
             Term::Modifier(Modifier::Redirect(RedirectModifier {
+                raw_value: "".to_string(),
+                version: Version {
+                    version: "".to_string(),
+                },
                 domain_spec: "example.com".to_string(),
+                terms: vec![],
+                raw_rdata: "".to_string(),
             })),
         ];
         let result = check_no_redirect_with_all(&terms, "");
@@ -244,7 +250,13 @@ mod test {
     #[test]
     fn test_redirect_without_all_returns_ok() {
         let terms = vec![Term::Modifier(Modifier::Redirect(RedirectModifier {
+            raw_value: "".to_string(),
+            version: Version {
+                version: "".to_string(),
+            },
             domain_spec: "example.com".to_string(),
+            terms: vec![],
+            raw_rdata: "".to_string(),
         }))];
         let result = check_no_redirect_with_all(&terms, "");
 
