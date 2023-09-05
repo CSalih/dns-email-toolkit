@@ -201,9 +201,7 @@ mod test {
 
     #[test]
     fn test_unknown_term_check_returns_err() {
-        let terms = vec![Term::Unknown(UnknownTerm {
-            raw_rdata: "foo".to_string(),
-        })];
+        let terms = vec![Term::with_unknown()];
         let result = check_has_unknown_term(&terms, "");
 
         assert!(result.is_err());
@@ -211,20 +209,7 @@ mod test {
 
     #[test]
     fn test_nested_unknown_term_check_returns_err() {
-        let terms = vec![Term::Directive(Directive {
-            mechanism: Mechanism::Include(IncludeMechanism {
-                raw_value: "include:foo".to_string(),
-                version: Version {
-                    version: "".to_string(),
-                },
-                domain_spec: "".to_string(),
-                terms: vec![Term::Unknown(UnknownTerm {
-                    raw_rdata: "foo".to_string(),
-                })],
-                raw_rdata: "".to_string(),
-            }),
-            qualifier: None,
-        })];
+        let terms = vec![Term::with_include_and_nested_unknown()];
         let result = check_has_unknown_term(&terms, "");
 
         assert!(result.is_err());
@@ -232,12 +217,7 @@ mod test {
 
     #[test]
     fn test_unknown_term_check_returns_ok() {
-        let terms = vec![Term::Directive(Directive {
-            mechanism: Mechanism::All(AllMechanism {
-                raw_value: "all".to_string(),
-            }),
-            qualifier: None,
-        })];
+        let terms = vec![Term::with_all()];
         let result = check_has_unknown_term(&terms, "").unwrap_or(false);
 
         assert!(result);
@@ -245,23 +225,7 @@ mod test {
 
     #[test]
     fn test_redirect_with_all_returns_err() {
-        let terms = vec![
-            Term::Directive(Directive {
-                mechanism: Mechanism::All(AllMechanism {
-                    raw_value: "all".to_string(),
-                }),
-                qualifier: None,
-            }),
-            Term::Modifier(Modifier::Redirect(RedirectModifier {
-                raw_value: "".to_string(),
-                version: Version {
-                    version: "".to_string(),
-                },
-                domain_spec: "example.com".to_string(),
-                terms: vec![],
-                raw_rdata: "".to_string(),
-            })),
-        ];
+        let terms = vec![Term::with_all(), Term::with_redirect()];
         let result = check_no_redirect_with_all(&terms, "");
 
         assert!(result.is_err());
@@ -269,15 +233,7 @@ mod test {
 
     #[test]
     fn test_redirect_without_all_returns_ok() {
-        let terms = vec![Term::Modifier(Modifier::Redirect(RedirectModifier {
-            raw_value: "".to_string(),
-            version: Version {
-                version: "".to_string(),
-            },
-            domain_spec: "example.com".to_string(),
-            terms: vec![],
-            raw_rdata: "".to_string(),
-        }))];
+        let terms = vec![Term::with_redirect()];
         let result = check_no_redirect_with_all(&terms, "");
 
         assert!(result.is_ok());
@@ -285,12 +241,7 @@ mod test {
 
     #[test]
     fn test_all_without_redirect_returns_ok() {
-        let terms = vec![Term::Directive(Directive {
-            mechanism: Mechanism::All(AllMechanism {
-                raw_value: "all".to_string(),
-            }),
-            qualifier: None,
-        })];
+        let terms = vec![Term::with_all()];
         let result = check_no_redirect_with_all(&terms, "");
 
         assert!(result.is_ok());
@@ -306,22 +257,7 @@ mod test {
 
     #[test]
     fn test_all_is_not_rightmost_returns_err() {
-        let terms = vec![
-            Term::Directive(Directive {
-                mechanism: Mechanism::All(AllMechanism {
-                    raw_value: "all".to_string(),
-                }),
-                qualifier: None,
-            }),
-            Term::Directive(Directive {
-                mechanism: Mechanism::A(AMechanism {
-                    raw_value: "a".to_string(),
-                    ip_addresses: vec![],
-                    subnet_mask: None,
-                }),
-                qualifier: None,
-            }),
-        ];
+        let terms = vec![Term::with_all(), Term::with_a()];
         let result = check_all_is_rightmost(&terms, "");
 
         assert!(result.is_err());
@@ -329,22 +265,7 @@ mod test {
 
     #[test]
     fn test_all_is_rightmost_returns_ok() {
-        let terms = vec![
-            Term::Directive(Directive {
-                mechanism: Mechanism::A(AMechanism {
-                    raw_value: "a".to_string(),
-                    ip_addresses: vec![],
-                    subnet_mask: None,
-                }),
-                qualifier: None,
-            }),
-            Term::Directive(Directive {
-                mechanism: Mechanism::All(AllMechanism {
-                    raw_value: "all".to_string(),
-                }),
-                qualifier: None,
-            }),
-        ];
+        let terms = vec![Term::with_a(), Term::with_all()];
         let result = check_all_is_rightmost(&terms, "");
 
         assert!(result.is_ok());
@@ -360,25 +281,7 @@ mod test {
 
     #[test]
     fn test_redirect_is_not_rightmost_returns_err() {
-        let terms = vec![
-            Term::Modifier(Modifier::Redirect(RedirectModifier {
-                raw_value: "".to_string(),
-                version: Version {
-                    version: "".to_string(),
-                },
-                domain_spec: "".to_string(),
-                terms: vec![],
-                raw_rdata: "".to_string(),
-            })),
-            Term::Directive(Directive {
-                mechanism: Mechanism::A(AMechanism {
-                    raw_value: "a".to_string(),
-                    ip_addresses: vec![],
-                    subnet_mask: None,
-                }),
-                qualifier: None,
-            }),
-        ];
+        let terms = vec![Term::with_redirect(), Term::with_a()];
         let result = check_redirect_is_rightmost(&terms, "");
 
         assert!(result.is_err());
@@ -386,14 +289,7 @@ mod test {
 
     #[test]
     fn test_without_redirect_returns_ok() {
-        let terms = vec![Term::Directive(Directive {
-            mechanism: Mechanism::A(AMechanism {
-                raw_value: "a".to_string(),
-                ip_addresses: vec![],
-                subnet_mask: None,
-            }),
-            qualifier: None,
-        })];
+        let terms = vec![Term::with_a()];
         let result = check_redirect_is_rightmost(&terms, "");
 
         assert!(result.is_ok());
@@ -401,15 +297,44 @@ mod test {
 
     #[test]
     fn test_redirect_is_rightmost_returns_ok() {
-        let terms = vec![
+        let terms = vec![Term::with_a(), Term::with_redirect()];
+        let result = check_redirect_is_rightmost(&terms, "");
+
+        assert!(result.is_ok());
+    }
+
+    impl Term {
+        fn with_unknown() -> Self {
+            Term::Unknown(UnknownTerm {
+                raw_rdata: "".to_string(),
+            })
+        }
+
+        fn with_include_and_nested_unknown() -> Self {
             Term::Directive(Directive {
-                mechanism: Mechanism::A(AMechanism {
-                    raw_value: "a".to_string(),
-                    ip_addresses: vec![],
-                    subnet_mask: None,
+                mechanism: Mechanism::Include(IncludeMechanism {
+                    raw_value: "".to_string(),
+                    version: Version {
+                        version: "".to_string(),
+                    },
+                    domain_spec: "".to_string(),
+                    terms: vec![Term::with_unknown()],
+                    raw_rdata: "".to_string(),
                 }),
                 qualifier: None,
-            }),
+            })
+        }
+
+        fn with_all() -> Self {
+            Term::Directive(Directive {
+                mechanism: Mechanism::All(AllMechanism {
+                    raw_value: "".to_string(),
+                }),
+                qualifier: None,
+            })
+        }
+
+        pub fn with_redirect() -> Self {
             Term::Modifier(Modifier::Redirect(RedirectModifier {
                 raw_value: "".to_string(),
                 version: Version {
@@ -418,10 +343,18 @@ mod test {
                 domain_spec: "".to_string(),
                 terms: vec![],
                 raw_rdata: "".to_string(),
-            })),
-        ];
-        let result = check_redirect_is_rightmost(&terms, "");
+            }))
+        }
 
-        assert!(result.is_ok());
+        pub fn with_a() -> Self {
+            Term::Directive(Directive {
+                mechanism: Mechanism::A(AMechanism {
+                    raw_value: "".to_string(),
+                    ip_addresses: vec![],
+                    subnet_mask: None,
+                }),
+                qualifier: None,
+            })
+        }
     }
 }
