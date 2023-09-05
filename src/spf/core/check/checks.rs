@@ -118,6 +118,26 @@ pub fn check_no_redirect_with_all(terms: &[Term], _raw_rdata: &str) -> Result<()
     }
 }
 
+pub fn check_redirect_is_rightmost(terms: &[Term], _raw_rdata: &str) -> Result<(), CheckError> {
+    let last_index = terms.len() - 1;
+    terms
+        .iter()
+        .position(|term| matches!(term, Term::Modifier(Modifier::Redirect(_))))
+        .or(Some(last_index))
+        .map(|index| {
+            if index == last_index {
+                Ok(())
+            } else {
+                Err(CheckError {
+                    summary: "Redirect modifier not rightmost".to_string(),
+                    description:
+                    "For clarity, any redirect modifier should appear as the very last term in a record"
+                        .to_string(),
+                })
+            }
+        }).expect("position should not be empty")
+}
+
 pub fn check_lookup_count(terms: &[Term], _raw_rdata: &str) -> Result<usize, CheckError> {
     const MAX_LOOKUP_COUNT: usize = 10;
 
@@ -334,6 +354,73 @@ mod test {
     fn test_without_all_rightmost_returns_ok() {
         let terms = vec![];
         let result = check_all_is_rightmost(&terms, "");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_redirect_is_not_rightmost_returns_err() {
+        let terms = vec![
+            Term::Modifier(Modifier::Redirect(RedirectModifier {
+                raw_value: "".to_string(),
+                version: Version {
+                    version: "".to_string(),
+                },
+                domain_spec: "".to_string(),
+                terms: vec![],
+                raw_rdata: "".to_string(),
+            })),
+            Term::Directive(Directive {
+                mechanism: Mechanism::A(AMechanism {
+                    raw_value: "a".to_string(),
+                    ip_addresses: vec![],
+                    subnet_mask: None,
+                }),
+                qualifier: None,
+            }),
+        ];
+        let result = check_redirect_is_rightmost(&terms, "");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_without_redirect_returns_ok() {
+        let terms = vec![Term::Directive(Directive {
+            mechanism: Mechanism::A(AMechanism {
+                raw_value: "a".to_string(),
+                ip_addresses: vec![],
+                subnet_mask: None,
+            }),
+            qualifier: None,
+        })];
+        let result = check_redirect_is_rightmost(&terms, "");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_redirect_is_rightmost_returns_ok() {
+        let terms = vec![
+            Term::Directive(Directive {
+                mechanism: Mechanism::A(AMechanism {
+                    raw_value: "a".to_string(),
+                    ip_addresses: vec![],
+                    subnet_mask: None,
+                }),
+                qualifier: None,
+            }),
+            Term::Modifier(Modifier::Redirect(RedirectModifier {
+                raw_value: "".to_string(),
+                version: Version {
+                    version: "".to_string(),
+                },
+                domain_spec: "".to_string(),
+                terms: vec![],
+                raw_rdata: "".to_string(),
+            })),
+        ];
+        let result = check_redirect_is_rightmost(&terms, "");
 
         assert!(result.is_ok());
     }
