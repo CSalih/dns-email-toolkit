@@ -1,4 +1,5 @@
 use crate::spf::domain::{Term, Version};
+use std::fmt::{Display, Formatter};
 
 pub enum Modifier {
     Exp(ExpModifier),
@@ -8,6 +9,15 @@ pub enum Modifier {
 impl Modifier {
     pub(crate) fn need_lookup(&self) -> bool {
         matches!(self, Modifier::Redirect(_))
+    }
+}
+
+impl Display for Modifier {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Modifier::Exp(e) => write!(f, "{}", e.raw_value),
+            Modifier::Redirect(r) => write!(f, "{}", r.raw_value),
+        }
     }
 }
 

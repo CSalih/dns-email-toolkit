@@ -107,13 +107,15 @@ impl SummarySpfWithDetailTerminalPresenter {
                 }
             }
             Term::Modifier(m) => {
+                println!("{}- {}", indent, m);
+
                 if let Modifier::Redirect(r) = &m {
                     let tabs = format!("{}\t", indent);
 
-                    println!("{} Raw Record: {}", tabs, r.raw_rdata);
+                    println!("{}Raw Record: {}", tabs, r.raw_rdata);
                     Self::recursive_print(&tabs, &r.terms);
                 } else {
-                    println!("{}- Modifier not implemented yet", indent);
+                    println!("{}- Modifier '{}' not implemented yet", indent, m);
                 }
             }
             Term::Unknown(u) => {
