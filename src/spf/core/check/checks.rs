@@ -119,7 +119,8 @@ pub fn check_no_redirect_with_all(terms: &[Term], _raw_rdata: &str) -> Result<()
 }
 
 pub fn check_redirect_is_rightmost(terms: &[Term], _raw_rdata: &str) -> Result<(), CheckError> {
-    let last_index = terms.len() - 1;
+    let last_index = terms.len().saturating_sub(1);
+
     terms
         .iter()
         .position(|term| matches!(term, Term::Modifier(Modifier::Redirect(_))))
