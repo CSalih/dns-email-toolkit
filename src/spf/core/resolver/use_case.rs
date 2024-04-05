@@ -7,7 +7,7 @@ use crate::spf::domain::{
 };
 
 pub trait ResolveSpfUseCase {
-    fn resolve(&mut self, query: &ResolveSpfQuery) -> Result<SpfAnswer, SpfError>;
+    fn resolve(&mut self, query: &ResolveSpfQuery) -> Result<SpfAnswer, Box<SpfError>>;
 }
 
 pub struct ResolveSpfQuery {
@@ -42,7 +42,7 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
 }
 
 impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
-    fn resolve(&mut self, query: &ResolveSpfQuery) -> Result<SpfAnswer, SpfError> {
+    fn resolve(&mut self, query: &ResolveSpfQuery) -> Result<SpfAnswer, Box<SpfError>> {
         let spf_rdata = match &query.record {
             Some(rdata) => Some(rdata.clone()),
             None => {
@@ -62,10 +62,10 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
         };
 
         if spf_rdata.is_none() {
-            return Err(SpfError::NoSpfRecordFound(format!(
+            return Err(Box::new(SpfError::NoSpfRecordFound(format!(
                 "No SPF record found for '{}'",
                 query.domain_name
-            )));
+            ))));
         }
 
         let raw_rdata = spf_rdata.unwrap();
@@ -308,7 +308,7 @@ mod test {
             spf_summary.is_err(),
             "No error was not returned but expected"
         );
-        match spf_summary.err().unwrap() {
+        match *spf_summary.err().unwrap() {
             SpfError::NoSpfRecordFound(_) => {}
             _ => panic!("Expected NoSpfRecordFound error but was not returned"),
         }

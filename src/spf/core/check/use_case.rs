@@ -68,28 +68,28 @@ impl<'a> SummarySpfUseCase for SummarySpfUseCaseImpl<'a> {
         // checks
         let mut check_errors: Vec<SpfError> = vec![];
         if let Err(err) = check_max_txt_length(&spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
         if let Err(err) = check_is_ascii(&spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
         if let Err(err) = check_version(&spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
         if let Err(err) = check_lookup_count(&spf_summary.terms, &spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
         if let Err(err) = check_has_unknown_term(&spf_summary.terms, &spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
         if let Err(err) = check_all_is_rightmost(&spf_summary.terms, &spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
         if let Err(err) = check_no_redirect_with_all(&spf_summary.terms, &spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
         if let Err(err) = check_redirect_is_rightmost(&spf_summary.terms, &spf_summary.raw_rdata) {
-            check_errors.push(err.into());
+            check_errors.push((*err).into());
         }
 
         if check_errors.is_empty() {

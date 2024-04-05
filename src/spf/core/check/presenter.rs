@@ -143,7 +143,7 @@ fn print_spf_error(error: &SpfError) {
 
 impl From<SyntaxError> for miette::Report {
     fn from(err: SyntaxError) -> Self {
-        let mut diag = miette::MietteDiagnostic::new(format!("{}", err.message));
+        let mut diag = miette::MietteDiagnostic::new(err.message.to_string());
         if let Some(help) = err.help {
             diag = diag.with_help(help);
         }
