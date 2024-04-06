@@ -3,7 +3,7 @@ use std::str::FromStr;
 use crate::dns::core::dns_resolver::{ARecordQuery, DnsResolver, MxRecordQuery, TxtRecordQuery};
 use crate::spf::domain::{
     AMechanism, AllMechanism, Directive, IncludeMechanism, Ip4Mechanism, Ip6Mechanism, Mechanism,
-    Modifier, MxMechanism, QualifierType, RedirectModifier, SpfError, Term, UnknownTerm, Version,
+    Modifier, MxMechanism, QualifierType, RedirectModifier, SpfError, Term, Version,
 };
 
 pub trait ResolveSpfUseCase {
@@ -116,9 +116,7 @@ impl<'a> ResolveSpfUseCase for ResolveSpfUseCaseImpl<'a> {
                     mechanism_str if mechanism_str.starts_with("redirect=") => {
                         self.to_redirect_term_mut(mechanism_str)
                     }
-                    _ => Term::Unknown(UnknownTerm {
-                        raw_rdata: term.to_string(),
-                    }),
+                    _ => Term::new_unknown(term, None),
                 }
             })
             .collect::<Vec<_>>();
@@ -189,9 +187,10 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         });
 
         match spf_summary {
-            Err(_) => Term::Unknown(UnknownTerm {
-                raw_rdata: "No spf found".to_string(),
-            }),
+            Err(err) => match err.as_ref() {
+                SpfError::NoSpfRecordFound(err) => Term::new_unknown(term, Some(err.to_string())),
+                _ => unreachable!(),
+            },
             Ok(spf) => Term::Directive(Directive {
                 qualifier,
                 mechanism: Mechanism::Include(IncludeMechanism {
@@ -214,9 +213,10 @@ impl<'a> ResolveSpfUseCaseImpl<'a> {
         });
 
         match spf_summary {
-            Err(_) => Term::Unknown(UnknownTerm {
-                raw_rdata: "No spf found".to_string(),
-            }),
+            Err(err) => match err.as_ref() {
+                SpfError::NoSpfRecordFound(err) => Term::new_unknown(term, Some(err.to_string())),
+                _ => unreachable!(),
+            },
             Ok(spf) => Term::Modifier(Modifier::Redirect(RedirectModifier {
                 raw_value: term.to_string(),
                 version: spf.version,

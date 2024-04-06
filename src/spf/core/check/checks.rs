@@ -103,10 +103,12 @@ pub fn check_has_unknown_term(terms: &[Term], raw_rdata: &str) -> Result<bool, B
                 let span_end = span_begin + unknown_term.raw_rdata.len();
                 let span_range = span_begin..span_end;
 
-                LabelSpan::at(
-                    span_range,
-                    format!("{} is an unknown term", unknown_term.raw_rdata),
-                )
+                let label = if let Some(reason) = &unknown_term.reason {
+                    reason.into()
+                } else {
+                    format!("{} is an unknown term", unknown_term.raw_rdata)
+                };
+                LabelSpan::at(span_range, label)
             }))
             .with_help(if unknown_terms.len() == 1 {
                 format!("Remove the unknown term '{}'", &unknown_terms[0].raw_rdata)
@@ -276,7 +278,7 @@ mod test {
 
     #[test]
     fn test_unknown_term_check_returns_err() {
-        let terms = vec![Term::with_unknown()];
+        let terms = vec![Term::new_unknown("", None)];
         let result = check_has_unknown_term(&terms, "");
 
         assert!(result.is_err());
@@ -380,12 +382,6 @@ mod test {
     }
 
     impl Term {
-        fn with_unknown() -> Self {
-            Term::Unknown(UnknownTerm {
-                raw_rdata: "".to_string(),
-            })
-        }
-
         fn with_include_and_nested_unknown() -> Self {
             Term::Directive(Directive {
                 mechanism: Mechanism::Include(IncludeMechanism {
@@ -394,7 +390,7 @@ mod test {
                         version: "".to_string(),
                     },
                     domain_spec: "".to_string(),
-                    terms: vec![Term::with_unknown()],
+                    terms: vec![Term::new_unknown("", None)],
                     raw_rdata: "".to_string(),
                 }),
                 qualifier: None,
