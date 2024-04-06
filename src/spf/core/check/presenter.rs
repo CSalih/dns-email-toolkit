@@ -1,6 +1,6 @@
 use crate::common::presenter::Presenter;
 use crate::spf::core::check::use_case::SpfSummary;
-use crate::spf::domain::{Mechanism, Modifier, SpfError, Term};
+use crate::spf::domain::{Mechanism, Modifier, SpfError, SyntaxError, Term};
 
 #[derive(Default)]
 pub struct SummarySpfTerminalPresenter {}
@@ -134,5 +134,29 @@ fn print_spf_error(error: &SpfError) {
             eprintln!("Check failed: {}", err.summary);
             eprintln!("\t {}", err.description);
         }
+        SpfError::SyntaxError(err) => {
+            let report: miette::Report = (*err).clone().into();
+            eprintln!("{:?}", report);
+        }
+    }
+}
+
+impl From<SyntaxError> for miette::Report {
+    fn from(err: SyntaxError) -> Self {
+        let mut diag = miette::MietteDiagnostic::new(err.message.to_string());
+        if let Some(help) = err.help {
+            diag = diag.with_help(help);
+        }
+        if let Some(src_labels) = err.src_labels {
+            diag = diag.with_labels(src_labels);
+        }
+        if let Some(severity) = err.severity {
+            diag = diag.with_severity(severity);
+        }
+        let mut report = miette::Report::from(diag);
+        if let Some(src) = err.src {
+            report = report.with_source_code(src)
+        }
+        report
     }
 }

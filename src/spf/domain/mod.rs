@@ -7,7 +7,7 @@ mod term;
 mod version;
 
 pub use directive::Directive;
-pub use error::{CheckError, SpfError};
+pub use error::{CheckError, LabelSpan, Severity, SpfError, SyntaxError};
 pub use mechanism::{
     AMechanism, AllMechanism, IncludeMechanism, Ip4Mechanism, Ip6Mechanism, Mechanism, MxMechanism,
 };
