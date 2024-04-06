@@ -37,7 +37,7 @@ pub fn check_is_ascii(rdata: &str) -> Result<(), CheckError> {
 pub fn check_version(rdata: &str) -> Result<(), CheckError> {
     let version = rdata.split(' ').next().unwrap_or("");
     match version {
-        v if v == "v=spf1" => Ok(()),
+        "v=spf1" => Ok(()),
         s if !s.starts_with("v=") => Err(CheckError {
             summary: "Invalid SPF version".to_string(),
             description: "Version must be defined first. SPF must start with the version 'v=spf1'"
