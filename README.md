@@ -1,12 +1,13 @@
 # DNS Email Toolkit (det)
 
+![det cli](docs/assets/cli.png)
+
 With `det` you can analyze the email DNS records of a domain for errors.
 
 > **Note**
-> DNS Email Toolkit (det) is in the early development stage. 
+> DNS Email Toolkit (det) is in the early development stage.
 > I'm using this project to lean the wonderful Rust language.
 > There is no guarantee this project will ever be released.
-
 
 ## License
 
