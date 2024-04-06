@@ -10,6 +10,15 @@ pub enum Term {
     Unknown(UnknownTerm),
 }
 
+impl Term {
+    pub fn new_unknown(raw_rdata: impl Into<String>, reason: Option<String>) -> Self {
+        Self::Unknown(UnknownTerm {
+            raw_rdata: raw_rdata.into(),
+            reason,
+        })
+    }
+}
+
 impl FromStr for Term {
     type Err = String;
 
@@ -37,6 +46,7 @@ impl FromStr for Term {
             })),
             Err(_) => Ok(Term::Unknown(UnknownTerm {
                 raw_rdata: mechanism_str.to_string(),
+                reason: None,
             })),
         }
     }
@@ -44,4 +54,5 @@ impl FromStr for Term {
 
 pub struct UnknownTerm {
     pub raw_rdata: String,
+    pub reason: Option<String>,
 }
